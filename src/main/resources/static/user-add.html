@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新增用户</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="https://unpkg.com/vue@2/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+        .container {
+            width: 60%;
+            margin: 30px auto;
+        }
+
+        .el-form-item {
+            margin-bottom: 20px;
+        }
+
+        .btn-group {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container" id="app">
+    <el-card>
+        <div slot="header">
+            <span>新增用户</span>
+        </div>
+        <el-form
+                :model="userForm"
+                :rules="rules"
+                ref="userForm"
+                label-width="100px"
+        >
+            <el-form-item label="用户名" prop="name">
+                <el-input v-model="userForm.name" placeholder="请输入用户名"></el-input>
+            </el-form-item>
+            <el-form-item label="邮箱" prop="email">
+                <el-input v-model="userForm.email" placeholder="请输入邮箱"></el-input>
+            </el-form-item>
+            <div class="btn-group">
+                <el-button type="primary" @click="submitForm" :disabled="!canSubmit">提交</el-button>
+                <el-button @click="resetForm">重置</el-button>
+                <el-button @click="goBack">返回列表</el-button>
+            </div>
+        </el-form>
+    </el-card>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+    new Vue({
+        el: '#app',
+        data() {
+            return {
+                userForm: {
+                    name: '',
+                    email: ''
+                },
+                // 校验规则：用户名必填，邮箱选填（填了才校验格式）
+                rules: {
+                    name: [
+                        {required: true, message: '用户名称不能为空', trigger: 'change'}
+                    ],
+                    email: [
+                        {
+                            pattern: /^[A-Za-z0-9]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/,
+                            message: '邮箱格式不符',
+                            trigger: 'change'
+                        }
+                    ]
+                }
+            }
+        },
+        // 实时判断提交按钮状态
+        computed: {
+            canSubmit() {
+                // 1. 用户名必须填写
+                const nameOk = this.userForm.name.trim() !== '';
+                // 2. 邮箱规则：不填=通过；填了=必须格式正确
+                const emailReg = /^[A-Za-z0-9]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/;
+                const emailOk = this.userForm.email === '' || emailReg.test(this.userForm.email);
+                // 两个都满足，按钮才可点击
+                return nameOk && emailOk;
+            }
+        },
+        mounted() {
+        },
+        methods: {
+            async submitForm() {
+                try {
+                    const res = await api.user.add(this.userForm);
+                    if (res.code === "Success") {
+                        // 先弹出成功提示
+                        this.$message.success('新增成功!');
+                        // 延迟500毫秒再跳转，保证提示能看到
+                        setTimeout(() => {
+                            this.goBack();
+                        }, 500);
+                    } else {
+                        this.$message.error(res.msg);
+                    }
+                } catch (err) {
+                    this.$message.error('服务器异常');
+                }
+            },
+            resetForm() {
+                this.$refs.userForm.resetFields();
+            },
+            goBack() {
+                window.location.href = 'user-list.html';
+            }
+        }
+    });
+</script>
+</body>
+</html>

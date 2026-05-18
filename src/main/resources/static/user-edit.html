@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑用户</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <script src="https://unpkg.com/vue@2/dist/vue.js"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+        .container {
+            width: 60%;
+            margin: 30px auto;
+        }
+        .el-form-item {
+            margin-bottom: 20px;
+        }
+        .btn-group {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container" id="app">
+    <el-card>
+        <div slot="header">
+            <span>编辑用户</span>
+        </div>
+        <el-form :model="userForm" :rules="rules" ref="userForm" label-width="100px">
+            <el-form-item label="ID" prop="id">
+                <el-input v-model="userForm.id" disabled></el-input>
+            </el-form-item>
+            <!-- 仅用户名 -->
+            <el-form-item label="用户名" prop="name">
+                <el-input v-model="userForm.name" placeholder="请输入用户名"></el-input>
+            </el-form-item>
+            <!-- 仅邮箱 -->
+            <el-form-item label="邮箱" prop="email">
+                <el-input v-model="userForm.email" placeholder="请输入邮箱"></el-input>
+            </el-form-item>
+            <div class="btn-group">
+                <el-button type="primary" @click="submitForm">保存</el-button>
+                <el-button @click="resetForm">重置</el-button>
+                <el-button @click="goBack">返回列表</el-button>
+            </div>
+        </el-form>
+    </el-card>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+    new Vue({
+        el: '#app',
+        data() {
+            return {
+                // 仅ID、用户名、邮箱
+                userForm: {
+                    id: '',
+                    name: '',
+                    email: ''
+                },
+                // 校验规则（匹配实体类）
+                rules: {
+                    name: [
+                        { required: true, message: '用户名称不能为空', trigger: 'blur' }
+                    ],
+                    email: [
+                        { pattern: /^[A-Za-z0-9\u4e00-\u9fa5]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/, message: '邮箱格式不符', trigger: 'blur' }
+                    ]
+                },
+                userId: ''
+            }
+        },
+        mounted() {
+            // 获取URL中的ID
+            const urlParams = new URLSearchParams(window.location.search);
+            this.userId = urlParams.get('id');
+            if (!this.userId) {
+                this.$message.error('用户ID不存在');
+                this.goBack();
+                return;
+            }
+            this.getUserDetail();
+        },
+        methods: {
+            // 获取用户详情
+            async getUserDetail() {
+                try {
+                    const res = await api.user.get(this.userId);
+                    this.userForm = res.data;
+                } catch (err) {
+                    this.$message.error('获取用户信息失败');
+                    this.goBack();
+                }
+            },
+            // 提交表单
+            async submitForm() {
+                try {
+                    const res = await api.user.add(this.userForm);
+                    if (res.code === "Success") {
+                        // 先弹出成功提示
+                        this.$message.success('修改成功!');
+                        // 延迟500毫秒再跳转，保证提示能看到
+                        setTimeout(() => {
+                            this.goBack();
+                        }, 500);
+                    } else {
+                        this.$message.error(res.msg);
+                    }
+                } catch (err) {
+                    this.$message.error('服务器异常');
+                }
+            },
+            // 重置表单
+            resetForm() {
+                this.getUserDetail(); // 重置为原始数据
+            },
+            // 返回列表
+            goBack() {
+                window.location.href = 'user-list.html';
+            }
+        }
+    });
+</script>
+</body>
+</html>

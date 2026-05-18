@@ -1,0 +1,103 @@
+###数据源配置
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    username: root
+    password: jmfjmf55
+    driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+    url: jdbc:log4jdbc:mysql://192.168.137.250:3306/spring_demo_database?serverTimezone=UTC&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true
+  web:
+    resources:
+      static-locations: classpath:/static/  # 静态资源目录（默认就是这个，可省略）
+    mvc:
+      welcome-page:
+        enabled: true  # 开启默认首页
+      static-path-pattern: /**  # 静态资源匹配规则（确保能访问到static下的所有文件）
+  jpa:
+    hibernate:
+      ddl-auto: none # 禁用JPA自动建表（我们手动建表了，避免冲突）
+      show-sql: true # 开启SQL日志，方便排查生成的SQL
+  #redis 配置
+  redis:
+    host: 192.168.137.250
+    port: 6379
+    password:
+    database: 0
+  data:
+    mongodb:
+      host: 192.168.137.250
+      port: 27017
+      database: test
+
+
+#thymelea模板配置
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML5
+    encoding: UTF-8
+    content-type: text/html
+    cache: false
+
+#mail配置
+  mail:
+    host: smtp.qq.com
+    username: 2944807875@qq.com
+    password: qvwkubiwtlcvddcb
+    default-encoding: UTF-8
+
+#rabbitmq配置
+  rabbitmq:
+    host: 192.168.137.250
+    port: 5672
+    username: admin
+    password: 123456
+    virtual-host: /
+    connection-timeout: 10000
+    listener:
+      simple:
+        acknowledge-mode: auto # 自动应答
+        auto-startup: true
+        default-requeue-rejected: false # 不重回队列
+        concurrency: 5
+        max-concurrency: 20
+        prefetch: 1 # 每次只处理一个信息
+        retry:
+          enabled: false
+    template:
+      exchange: web.demo
+      routing-key: user.key
+
+#MyBatis配置
+mybatis:
+  mapper-locations: classpath:mapper/*Mapper.xml
+
+#管理员默认密码
+admin:
+  password: 123456
+
+# mybatis-plus 配置（比mybatis简单）
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true # 下划线转驼峰
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 打印sql
+  type-aliases-package: com.xxx.entity # 实体类包
+  global-config:
+    db-config:
+      logic-delete-field: isDeleted #实体类字段名
+      logic-delete-value: 1 #已删除
+      logic-not-delete-value: 0 #未删除
+wechat:
+  mini:
+    app-id: wx123456789
+    app-secret: abcdefghijklmn
+
+#微信登录配置
+wx:
+  login:
+    #签名密钥
+    sign-secret: jmfjmf0335
+    #签名过期时间 秒
+    sign-expire-seconds: 300
+    #防重放nonce过期时间 秒
+    nonce-expire-seconds: 60
