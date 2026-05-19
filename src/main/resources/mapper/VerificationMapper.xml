@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.coupon.mapper.VerificationMapper">
+
+    <!-- 三表连接查询核销记录（后台管理使用）- 支持MyBatis Plus分页插件 -->
+    <select id="selectVerificationRecordsWithJoin" resultType="com.coupon.dto.VerificationRecordAdminDTO">
+        SELECT 
+            vr.id, 
+            vr.member_id AS memberId, 
+            m.phone AS memberPhone, 
+            vr.template_id AS templateId, 
+            ct.name AS couponName, 
+            vr.verification_code AS verificationCode, 
+            vr.verifier, 
+            vr.verification_time AS verificationTime, 
+            vr.create_time AS createTime 
+        FROM verification_record vr 
+        LEFT JOIN member m ON vr.member_id = m.id 
+        LEFT JOIN coupon_template ct ON vr.template_id = ct.id 
+        WHERE vr.verification_time IS NOT NULL 
+        <if test="query.phone != null and query.phone != ''">
+            AND m.phone LIKE CONCAT('%', #{query.phone}, '%')
+        </if>
+        <if test="query.startTime != null">
+            AND vr.verification_time &gt;= #{query.startTime}
+        </if>
+        <if test="query.endTime != null">
+            AND vr.verification_time &lt;= #{query.endTime}
+        </if>
+        ORDER BY vr.verification_time DESC
+    </select>
+
+</mapper>

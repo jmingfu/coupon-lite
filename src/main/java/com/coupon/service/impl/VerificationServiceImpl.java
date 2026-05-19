@@ -1,11 +1,15 @@
 package com.coupon.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.coupon.common.enums.CouponStatusEnum;
 import com.coupon.common.exception.ReturnException;
 import com.coupon.common.util.MemberUtil;
 import com.coupon.dto.MemberDTO;
 import com.coupon.dto.VerificationDTO;
+import com.coupon.dto.VerificationRecordAdminDTO;
+import com.coupon.dto.VerificationRecordQueryDTO;
 import com.coupon.entity.CouponTemplate;
 import com.coupon.entity.MemberCoupon;
 import com.coupon.entity.VerificationRecord;
@@ -211,5 +215,12 @@ public class VerificationServiceImpl implements VerificationService {
 
             return dto;
         }).collect(java.util.stream.Collectors.toList());
+    }
+
+    @Override
+    public IPage<VerificationRecordAdminDTO> pageVerificationRecords(Page<VerificationRecordAdminDTO> page,
+                                                                     VerificationRecordQueryDTO query) {
+        // 使用MyBatis Plus分页插件，自动处理分页
+        return verificationMapper.selectVerificationRecordsWithJoin(page, query);
     }
 }

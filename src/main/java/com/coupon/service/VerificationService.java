@@ -1,6 +1,10 @@
 package com.coupon.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.coupon.dto.VerificationDTO;
+import com.coupon.dto.VerificationRecordAdminDTO;
+import com.coupon.dto.VerificationRecordQueryDTO;
 
 import java.util.List;
 
@@ -34,4 +38,14 @@ public interface VerificationService {
      * @return 核销记录列表
      */
     List<VerificationDTO> listMyVerifications();
+
+    /**
+     * 后台分页查询核销记录列表（使用MyBatis Plus分页插件）
+     *
+     * @param page  分页对象
+     * @param query 查询条件
+     * @return 核销记录分页列表
+     */
+    IPage<VerificationRecordAdminDTO> pageVerificationRecords(Page<VerificationRecordAdminDTO> page,
+                                                               VerificationRecordQueryDTO query);
 }
