@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.coupon.common.RedisConstant;
+import com.coupon.common.enums.CouponStatusEnum;
 import com.coupon.common.enums.CouponTypeEnum;
 import com.coupon.common.exception.ReturnException;
 import com.coupon.common.util.MemberUtil;
@@ -26,8 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-
-;
 
 /**
  * 基于SpringBoot框架的个人练手项目-
@@ -145,6 +144,7 @@ public class CouponServiceImpl implements CouponService {
             MemberCoupon memberCoupon = new MemberCoupon();
             memberCoupon.setMemberId(memberInfo.getId());
             memberCoupon.setTemplateId(couponId);
+            memberCoupon.setStatus(CouponStatusEnum.RECEIVED); // 设置状态为已领取
             memberCouponMapper.insert(memberCoupon);
             CouponTemplate couponTemplate = couponMapper.selectById(couponId);
             BeanUtils.copyProperties(couponTemplate, couponDTO);

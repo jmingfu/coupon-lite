@@ -45,4 +45,6 @@ public class VerificationController {
     public Result<List<VerificationDTO>> listMyVerifications() {
         return Result.success(verificationService.listMyVerifications());
     }
+
+    
 }
