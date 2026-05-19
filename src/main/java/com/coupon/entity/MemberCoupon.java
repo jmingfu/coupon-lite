@@ -40,9 +40,9 @@ public class MemberCoupon implements Serializable {
     @ApiModelProperty("优惠券模板ID")
     private Long templateId;
     /**
-     * 状态 1已领取 2待核销 3已核销 4已过期
+     * 状态 1未使用 2待核销 3已核销 4已过期
      */
-    @ApiModelProperty("状态 1已领取 2待核销 3已核销 4已过期")
+    @ApiModelProperty("状态 1未使用 2待核销 3已核销 4已过期")
     private CouponStatusEnum status;
     /**
      * 核销码（唯一）

@@ -80,7 +80,7 @@ public class VerificationServiceImpl implements VerificationService {
 
         // 检查优惠券状态（使用枚举）
         CouponStatusEnum status = memberCoupon.getStatus();
-        if (status != CouponStatusEnum.RECEIVED) {
+        if (status != CouponStatusEnum.UNUSED) {
             if (status == CouponStatusEnum.PENDING_VERIFICATION) {
                 throw new ReturnException("优惠券已处于待核销状态");
             } else if (status == CouponStatusEnum.VERIFIED) {
@@ -157,7 +157,7 @@ public class VerificationServiceImpl implements VerificationService {
         // 检查优惠券状态，必须是待核销状态才能确认核销
         CouponStatusEnum status = memberCoupon.getStatus();
         if (status != CouponStatusEnum.PENDING_VERIFICATION) {
-            if (status == CouponStatusEnum.RECEIVED) {
+            if (status == CouponStatusEnum.UNUSED) {
                 throw new ReturnException("优惠券尚未进入待核销状态");
             } else if (status == CouponStatusEnum.VERIFIED) {
                 throw new ReturnException("优惠券已核销");

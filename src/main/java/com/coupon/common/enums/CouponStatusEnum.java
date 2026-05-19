@@ -13,9 +13,9 @@ import lombok.Getter;
 public enum CouponStatusEnum {
 
     /**
-     * 已领取
+     * 未使用
      */
-    RECEIVED(1, "已领取"),
+    UNUSED(1, "未使用"),
 
     /**
      * 待核销

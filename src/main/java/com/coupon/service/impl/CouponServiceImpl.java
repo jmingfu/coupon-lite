@@ -145,7 +145,7 @@ public class CouponServiceImpl implements CouponService {
             MemberCoupon memberCoupon = new MemberCoupon();
             memberCoupon.setMemberId(memberInfo.getId());
             memberCoupon.setTemplateId(couponId);
-            memberCoupon.setStatus(CouponStatusEnum.RECEIVED); // 设置状态为已领取
+            memberCoupon.setStatus(CouponStatusEnum.UNUSED); // 设置状态为未使用
             memberCoupon.setValidStartTime(couponTemplate.getValidStartTime());
             memberCoupon.setValidEndTime(couponTemplate.getValidEndTime());
             memberCouponMapper.insert(memberCoupon);
