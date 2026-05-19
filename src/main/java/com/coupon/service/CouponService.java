@@ -21,7 +21,7 @@ public interface CouponService {
     CouponDTO getCoupon(Long id) throws Exception;
     //
     IPage<CouponDTO> pageCoupon(CouponDTO dto);
-
+    //领取优惠券
     CouponDTO receiveCoupon(Long couponId);
 
     List<CouponDTO> getMyCoupons();

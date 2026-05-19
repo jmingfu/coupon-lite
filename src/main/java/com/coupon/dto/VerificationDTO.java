@@ -1,11 +1,13 @@
 package com.coupon.dto;
 
-import io.swagger.annotations.ApiModelProperty;
-import lombok.Data;
-import org.springframework.validation.annotation.Validated;
+import java.util.Date;
 
 import javax.validation.constraints.Size;
-import java.util.Date;
+
+import org.springframework.validation.annotation.Validated;
+
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
 
 /**
  * 核销记录DTO
