@@ -105,13 +105,11 @@ public class VerificationServiceImpl implements VerificationService {
         // 生成唯一核销码
         String verificationCode = generateUniqueCode();
 
-        // 创建核销记录
+        // 创建核销记录（仅生成核销码，不设置核销人和核销时间）
         VerificationRecord record = new VerificationRecord();
         record.setMemberId(memberInfo.getId());
         record.setTemplateId(templateId);
         record.setVerificationCode(verificationCode);
-        record.setVerifier("SYSTEM"); // 模拟系统核销人
-        record.setVerificationTime(new Date());
 
         // 保存核销记录（使用MyBatis Plus）
         verificationMapper.insert(record);
@@ -126,6 +124,65 @@ public class VerificationServiceImpl implements VerificationService {
         BeanUtils.copyProperties(record, dto);
         dto.setCouponName(couponTemplate.getName());
         dto.setCouponType(couponTemplate.getType().ordinal() + 1);
+
+        return dto;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public VerificationDTO confirmVerification(String verificationCode) {
+        // 根据核销码查询核销记录
+        LambdaQueryWrapper<VerificationRecord> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(VerificationRecord::getVerificationCode, verificationCode);
+        VerificationRecord record = verificationMapper.selectOne(wrapper);
+
+        if (record == null) {
+            throw new ReturnException("核销码不存在");
+        }
+
+        // 查询用户优惠券
+        LambdaQueryWrapper<MemberCoupon> couponWrapper = new LambdaQueryWrapper<>();
+        couponWrapper.eq(MemberCoupon::getMemberId, record.getMemberId())
+                    .eq(MemberCoupon::getTemplateId, record.getTemplateId());
+        MemberCoupon memberCoupon = memberCouponMapper.selectOne(couponWrapper);
+
+        if (memberCoupon == null) {
+            throw new ReturnException("用户未领取该优惠券");
+        }
+
+        // 检查优惠券状态，必须是待核销状态才能确认核销
+        CouponStatusEnum status = memberCoupon.getStatus();
+        if (status != CouponStatusEnum.PENDING_VERIFICATION) {
+            if (status == CouponStatusEnum.RECEIVED) {
+                throw new ReturnException("优惠券尚未进入待核销状态");
+            } else if (status == CouponStatusEnum.VERIFIED) {
+                throw new ReturnException("优惠券已核销");
+            } else if (status == CouponStatusEnum.EXPIRED) {
+                throw new ReturnException("优惠券已过期");
+            } else {
+                throw new ReturnException("优惠券状态异常");
+            }
+        }
+
+        // 更新优惠券状态为已核销（状态流转：待核销->已核销）
+        memberCoupon.setStatus(CouponStatusEnum.VERIFIED);
+        memberCouponMapper.updateById(memberCoupon);
+
+        // 更新核销记录的核销时间和核销人（模拟店员）
+        record.setVerifier("STAFF"); // 店员
+        record.setVerificationTime(new Date());
+        verificationMapper.updateById(record);
+
+        // 查询优惠券模板信息
+        CouponTemplate couponTemplate = couponMapper.selectById(record.getTemplateId());
+
+        // 返回核销信息
+        VerificationDTO dto = new VerificationDTO();
+        BeanUtils.copyProperties(record, dto);
+        if (couponTemplate != null) {
+            dto.setCouponName(couponTemplate.getName());
+            dto.setCouponType(couponTemplate.getType().ordinal() + 1);
+        }
 
         return dto;
     }

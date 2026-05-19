@@ -21,6 +21,14 @@ public interface VerificationService {
     VerificationDTO generateVerification(Long templateId);
 
     /**
+     * 确认核销（店员扫码后点击确认）
+     *
+     * @param verificationCode 核销码
+     * @return 核销记录
+     */
+    VerificationDTO confirmVerification(String verificationCode);
+
+    /**
      * 查询会员的核销记录列表
      *
      * @return 核销记录列表

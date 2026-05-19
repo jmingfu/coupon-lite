@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
@@ -35,6 +36,16 @@ public class VerificationController {
     public Result<VerificationDTO> generateVerification(
             @RequestParam @NotNull(message = "优惠券模板ID不能为空") Long templateId){
         return Result.success(verificationService.generateVerification(templateId));
+    }
+
+    /**
+     * 店员扫码后确认核销
+     */
+    @PostMapping("/confirm")
+    @ApiOperation(value = "确认核销", notes = "店员扫码后点击确认核销，将优惠券状态改为已核销")
+    public Result<VerificationDTO> confirmVerification(
+            @RequestParam @NotBlank(message = "核销码不能为空") String verificationCode){
+        return Result.success(verificationService.confirmVerification(verificationCode));
     }
 
     /**
