@@ -1,8 +1,8 @@
 package com.coupon.common.config;
 
 import com.coupon.common.RedisConstant;
-import com.coupon.common.enums.CodeEnum;
 import com.coupon.common.Result;
+import com.coupon.common.enums.CodeEnum;
 import com.coupon.dto.MemberDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;

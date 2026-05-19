@@ -2,7 +2,7 @@ package com.coupon.common.exception;
 
 import com.coupon.common.enums.CodeEnum;
 
-public class ReturnException extends RuntimeException{
+public class ReturnException extends RuntimeException {
     private CodeEnum code;
     private String msg;
 
@@ -12,10 +12,10 @@ public class ReturnException extends RuntimeException{
         this.code = CodeEnum.ServerError;
     }
 
-    public ReturnException(CodeEnum code,String msg){
+    public ReturnException(CodeEnum code, String msg) {
         super(msg);
-        this.code=code;
-        this.msg=msg;
+        this.code = code;
+        this.msg = msg;
     }
 
     public CodeEnum getCode() {

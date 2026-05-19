@@ -16,6 +16,7 @@ public enum CouponTypeEnum {
     FULL_REDUCTION(1, "满减"),
     DISCOUNT(2, "折扣"),
     NO_THRESHOLD(3, "无门槛");
+
     @EnumValue
     private final int code;
     private final String desc;
@@ -25,7 +26,7 @@ public enum CouponTypeEnum {
         this.desc = desc;
     }
 
-    public Integer getCode() {
+    public int getCode() {
         return code;
     }
 
@@ -35,7 +36,7 @@ public enum CouponTypeEnum {
 
     public static CouponTypeEnum getByCode(int code) {
         for (CouponTypeEnum type : values()) {
-            if (type.code==code) {
+            if (type.code == code) {
                 return type;
             }
         }

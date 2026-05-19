@@ -1,8 +1,8 @@
 package com.coupon.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.coupon.common.annotation.ApiLimit;
 import com.coupon.common.Result;
+import com.coupon.common.annotation.ApiLimit;
 import com.coupon.dto.CouponDTO;
 import com.coupon.service.CouponService;
 import io.swagger.annotations.Api;
@@ -25,29 +25,29 @@ public class CouponController {
     private CouponService couponService;
 
     @PostMapping()
-    public Result<CouponDTO> addOrEdit(@Validated @RequestBody CouponDTO couponDTO)throws Exception{
+    public Result<CouponDTO> addOrEdit(@Validated @RequestBody CouponDTO couponDTO) throws Exception {
         return Result.success(couponService.addOrEdit(couponDTO));
     }
 
     @DeleteMapping()
-    public Result<Boolean> delete(@RequestParam Long id){
+    public Result<Boolean> delete(@RequestParam Long id) {
         return Result.success(couponService.delete(id));
     }
 
     @GetMapping()
-    public Result<CouponDTO> getCoupon(@RequestParam Long id)throws Exception{
+    public Result<CouponDTO> getCoupon(@RequestParam Long id) throws Exception {
         return Result.success(couponService.getCoupon(id));
     }
 
     @GetMapping("/page")
     @ApiLimit()
-    public Result<IPage<CouponDTO>> pageCoupon(@Validated CouponDTO couponDTO){
+    public Result<IPage<CouponDTO>> pageCoupon(@Validated CouponDTO couponDTO) {
         return Result.success(couponService.pageCoupon(couponDTO));
     }
 
     @PostMapping("/receive")
     @ApiLimit
-    public Result<CouponDTO> receiveCoupon(@RequestParam Long id){
+    public Result<CouponDTO> receiveCoupon(@RequestParam Long id) {
         return Result.success(couponService.receiveCoupon(id));
     }
 }

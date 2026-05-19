@@ -15,7 +15,7 @@ import lombok.Data;
 @Api(tags = "微信小程序接口返回结果")
 public class WechatCode2SessionRes {
     @ApiModelProperty("用户唯一标识")
-    private String openId;
+    private String openid;
 
     @ApiModelProperty("会话密钥")
     private String SessionKey;

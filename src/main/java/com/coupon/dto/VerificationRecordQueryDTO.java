@@ -1,11 +1,10 @@
 package com.coupon.dto;
 
+import com.coupon.common.PageParam;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.Date;
-
-import com.coupon.common.PageParam;
 
 /**
  * 核销记录查询参数DTO
@@ -14,7 +13,7 @@ import com.coupon.common.PageParam;
  * @date 2026-05-19
  */
 @Data
-public class VerificationRecordQueryDTO extends PageParam{
+public class VerificationRecordQueryDTO extends PageParam {
 
 
     /**

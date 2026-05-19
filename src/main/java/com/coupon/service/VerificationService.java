@@ -47,5 +47,5 @@ public interface VerificationService {
      * @return 核销记录分页列表
      */
     IPage<VerificationRecordAdminDTO> pageVerificationRecords(Page<VerificationRecordAdminDTO> page,
-                                                               VerificationRecordQueryDTO query);
+                                                              VerificationRecordQueryDTO query);
 }

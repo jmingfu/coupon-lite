@@ -5,10 +5,9 @@ import com.coupon.common.enums.CouponTypeEnum;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import org.hibernate.validator.constraints.Length;
 import org.springframework.validation.annotation.Validated;
 
-import javax.validation.constraints.*;
+import javax.validation.constraints.DecimalMin;
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -23,24 +22,18 @@ import java.util.Date;
 @Api(tags = "优惠券模板，前后端参数")
 @Validated
 public class CouponDTO extends PageParam {
-    /**
-     * 主键ID
-     */
-    @NotNull(message="[主键ID]不能为空")
+
     @ApiModelProperty("主键ID")
     private Long id;
     /**
      * 优惠券名称
      */
-    @NotBlank(message="[优惠券名称]不能为空")
-    @Size(max= 64,message="编码长度不能超过64")
+
     @ApiModelProperty("优惠券名称")
-    @Length(max= 64,message="编码长度不能超过64")
     private String name;
     /**
      * 类型 1满减 2折扣 3无门槛
      */
-    @NotNull(message="[类型 1满减 2折扣 3无门槛]不能为空")
     @ApiModelProperty("类型 1满减 2折扣 3无门槛")
     private CouponTypeEnum type;
     /**
@@ -62,25 +55,21 @@ public class CouponDTO extends PageParam {
     /**
      * 发放总量
      */
-    @NotNull(message="[发放总量]不能为空")
     @ApiModelProperty("发放总量")
     private Integer totalCount;
     /**
      * 剩余库存
      */
-    @NotNull(message="[剩余库存]不能为空")
     @ApiModelProperty("剩余库存")
     private Integer remainCount;
     /**
      * 有效期开始
      */
-    @NotNull(message="[有效期开始]不能为空")
     @ApiModelProperty("有效期开始")
     private Date validStartTime;
     /**
      * 有效期结束
      */
-    @NotNull(message="[有效期结束]不能为空")
     @ApiModelProperty("有效期结束")
     private Date validEndTime;
     /**
@@ -123,8 +112,6 @@ public class CouponDTO extends PageParam {
     /**
      * 核销码（唯一）
      */
-    @Size(max= 32,message="编码长度不能超过32")
     @ApiModelProperty("核销码（唯一）")
-    @Length(max= 32,message="编码长度不能超过32")
     private String verificationCode;
 }

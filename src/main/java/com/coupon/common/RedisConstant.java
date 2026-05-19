@@ -15,7 +15,7 @@ public class RedisConstant {
     public static final String COUPON_IDS = "coupon:ids:";
 
     // 优惠券领取请求锁
-    public static final String COUPON_RECEIVE_LOCK ="coupon:receive:lock:";
+    public static final String COUPON_RECEIVE_LOCK = "coupon:receive:lock:";
 
     // 优惠券一小时内访问次数
     public static final String COUPON_COUNTS = "coupon:counts:";

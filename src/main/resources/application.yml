@@ -5,7 +5,7 @@ spring:
     username: root
     password: jmfjmf55
     driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
-    url: jdbc:log4jdbc:mysql://192.168.137.250:3306/spring_demo_database?serverTimezone=UTC&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:log4jdbc:mysql://192.168.137.250:3306/wx-miniapp-database?serverTimezone=UTC&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true
   web:
     resources:
       static-locations: classpath:/static/  # 静态资源目录（默认就是这个，可省略）
@@ -81,16 +81,18 @@ mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true # 下划线转驼峰
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 打印sql
+    default-enum-type-handler: com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler
   type-aliases-package: com.xxx.entity # 实体类包
   global-config:
     db-config:
       logic-delete-field: isDeleted #实体类字段名
       logic-delete-value: 1 #已删除
       logic-not-delete-value: 0 #未删除
+
 wechat:
   mini:
-    app-id: wx123456789
-    app-secret: abcdefghijklmn
+    app-id: wx96cea6697f5bc9e7
+    app-secret: ${WECHAT_SECRET}
 
 #微信登录配置
 wx:

@@ -1,8 +1,8 @@
 package com.coupon.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.coupon.entity.CouponTemplate;
 import com.coupon.dto.CouponDTO;
+import com.coupon.entity.CouponTemplate;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
@@ -20,7 +20,7 @@ import java.util.List;
 @Repository
 @Mapper
 public interface CouponMapper extends BaseMapper<CouponTemplate> {
-    int decreaseAmount(@Param("id")Long id);
+    int decreaseAmount(@Param("id") Long id);
 
     List<CouponDTO> getMyCoupons(@Param("memberId") Long memberId);
 }

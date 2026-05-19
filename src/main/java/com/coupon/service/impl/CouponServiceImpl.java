@@ -141,12 +141,14 @@ public class CouponServiceImpl implements CouponService {
             if (couponMapper.decreaseAmount(couponId) == 0) {
                 throw new ReturnException("优惠券已领完");
             }
+            CouponTemplate couponTemplate = couponMapper.selectById(couponId);
             MemberCoupon memberCoupon = new MemberCoupon();
             memberCoupon.setMemberId(memberInfo.getId());
             memberCoupon.setTemplateId(couponId);
             memberCoupon.setStatus(CouponStatusEnum.RECEIVED); // 设置状态为已领取
+            memberCoupon.setValidStartTime(couponTemplate.getValidStartTime());
+            memberCoupon.setValidEndTime(couponTemplate.getValidEndTime());
             memberCouponMapper.insert(memberCoupon);
-            CouponTemplate couponTemplate = couponMapper.selectById(couponId);
             BeanUtils.copyProperties(couponTemplate, couponDTO);
         } catch (DuplicateKeyException duplicateKeyException) {
             throw new ReturnException("请勿重复领取");

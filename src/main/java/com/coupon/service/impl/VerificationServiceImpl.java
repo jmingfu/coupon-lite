@@ -71,7 +71,7 @@ public class VerificationServiceImpl implements VerificationService {
         // 检查用户是否领取过该优惠券
         LambdaQueryWrapper<MemberCoupon> couponWrapper = new LambdaQueryWrapper<>();
         couponWrapper.eq(MemberCoupon::getMemberId, memberInfo.getId())
-                    .eq(MemberCoupon::getTemplateId, templateId);
+                .eq(MemberCoupon::getTemplateId, templateId);
         MemberCoupon memberCoupon = memberCouponMapper.selectOne(couponWrapper);
 
         if (memberCoupon == null) {
@@ -95,7 +95,7 @@ public class VerificationServiceImpl implements VerificationService {
         // 检查是否已经有核销记录（使用memberId和templateId联合查询）
         LambdaQueryWrapper<VerificationRecord> recordWrapper = new LambdaQueryWrapper<>();
         recordWrapper.eq(VerificationRecord::getMemberId, memberInfo.getId())
-                    .eq(VerificationRecord::getTemplateId, templateId);
+                .eq(VerificationRecord::getTemplateId, templateId);
         VerificationRecord existingRecord = verificationMapper.selectOne(recordWrapper);
         if (existingRecord != null) {
             // 返回已有的核销记录
@@ -147,7 +147,7 @@ public class VerificationServiceImpl implements VerificationService {
         // 查询用户优惠券
         LambdaQueryWrapper<MemberCoupon> couponWrapper = new LambdaQueryWrapper<>();
         couponWrapper.eq(MemberCoupon::getMemberId, record.getMemberId())
-                    .eq(MemberCoupon::getTemplateId, record.getTemplateId());
+                .eq(MemberCoupon::getTemplateId, record.getTemplateId());
         MemberCoupon memberCoupon = memberCouponMapper.selectOne(couponWrapper);
 
         if (memberCoupon == null) {
@@ -198,7 +198,7 @@ public class VerificationServiceImpl implements VerificationService {
         // 使用MyBatis Plus查询核销记录列表
         LambdaQueryWrapper<VerificationRecord> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(VerificationRecord::getMemberId, memberInfo.getId())
-               .orderByDesc(VerificationRecord::getCreateTime);
+                .orderByDesc(VerificationRecord::getCreateTime);
         List<VerificationRecord> records = verificationMapper.selectList(wrapper);
 
         // 转换为DTO列表

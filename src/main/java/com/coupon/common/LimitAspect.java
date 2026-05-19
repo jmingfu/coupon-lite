@@ -49,7 +49,7 @@ public class LimitAspect {
             if (token != null) {
                 key = "limit:openId:" + token;
                 count = redisTemplate.opsForValue().increment(key, 1);
-                if(count==1){
+                if (count == 1) {
                     redisTemplate.expire(key, 1, TimeUnit.SECONDS);
                 }
                 if (count > openCount) {
@@ -58,10 +58,10 @@ public class LimitAspect {
             } else {
                 key = "limit:ip:" + ip;
                 count = redisTemplate.opsForValue().increment(key, 1);
-                if(count==1){
+                if (count == 1) {
                     redisTemplate.expire(key, 1, TimeUnit.SECONDS);
                 }
-                if(count>ipCount){
+                if (count > ipCount) {
                     throw new ReturnException("网络繁忙，请稍后重试");
                 }
             }

@@ -15,12 +15,16 @@ import java.util.List;
 public interface CouponService {
     //新增/编辑优惠券模板
     CouponDTO addOrEdit(CouponDTO couponDTO) throws Exception;
+
     //删除优惠券
     Boolean delete(Long id);
+
     //查看单个优惠券
     CouponDTO getCoupon(Long id) throws Exception;
+
     //
     IPage<CouponDTO> pageCoupon(CouponDTO dto);
+
     //领取优惠券
     CouponDTO receiveCoupon(Long couponId);
 

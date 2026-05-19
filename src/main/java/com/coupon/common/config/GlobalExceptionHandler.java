@@ -1,8 +1,8 @@
 package com.coupon.common.config;
 
+import com.coupon.common.Result;
 import com.coupon.common.enums.CodeEnum;
 import com.coupon.common.exception.ReturnException;
-import com.coupon.common.Result;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;

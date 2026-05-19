@@ -1,7 +1,7 @@
 package com.coupon.common.util;
 
-import com.coupon.common.exception.ReturnException;
 import com.coupon.common.RedisConstant;
+import com.coupon.common.exception.ReturnException;
 import com.coupon.dto.MemberDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,15 +21,21 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 @Component
 public class MemberUtil {
     @Autowired
-    private  static StringRedisTemplate redisTemplate;
+    private static StringRedisTemplate redisTemplate;
 
     @Autowired
     private static ObjectMapper objectMapper;
 
-    public static MemberDTO getMemberInfo(){
-        String json=getToken();
+    @Autowired
+    public MemberUtil(StringRedisTemplate redisTemplate, ObjectMapper objectMapper) {
+        MemberUtil.redisTemplate = redisTemplate;
+        MemberUtil.objectMapper = objectMapper;
+    }
+
+    public static MemberDTO getMemberInfo() {
+        String json = getToken();
         try {
-            return objectMapper.readValue(json,MemberDTO.class);
+            return objectMapper.readValue(json, MemberDTO.class);
         } catch (JsonProcessingException e) {
             throw new ReturnException("会员详情获取失败");
         }

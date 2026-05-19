@@ -5,15 +5,16 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.coupon.common.RedisConstant;
+import com.coupon.common.config.WechatLoginProperties;
 import com.coupon.common.config.WechatMiniConfig;
 import com.coupon.common.exception.ReturnException;
 import com.coupon.controller.MemberController;
+import com.coupon.dto.MemberDTO;
+import com.coupon.dto.WechatCode2SessionRes;
 import com.coupon.entity.Member;
 import com.coupon.mapper.MemberMapper;
 import com.coupon.service.MemberService;
-import com.coupon.common.RedisConstant;
-import com.coupon.common.config.WechatLoginProperties;
-import com.coupon.dto.MemberDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +22,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.UUID;
@@ -54,24 +56,26 @@ public class MemberServiceImpl implements MemberService {
 
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public MemberDTO wxLogin(MemberDTO memberDTO) throws Exception {
         if (!checkSign(memberDTO.getSign(), memberDTO.getCode(), memberDTO.getNonce(), memberDTO.getTimeStamp())) {
             throw new ReturnException("非法请求");
         }
-//        String url = String.format("https://api.weixin.qq.com/sns/jscode2session?appid=%s&secret=%s&js_code=%s&grant_type=authorization_code",
-//                wechatMiniConfig.getAppId(),
-//                wechatMiniConfig.getAppSecret(),
-//                memberDTO.getCode());
-//        WechatCode2SessionRes res=restTemplate.getForObject(url,WechatCode2SessionRes.class);
-//        if(res==null|| StringUtils.isNotBlank(res.getErrCode())){
-//            log.error("小程序授权失败"+res.getErrMsg());
-//        }
-        String openId = memberDTO.getOpenid();
+        String url = String.format("https://api.weixin.qq.com/sns/jscode2session?appid=%s&secret=%s&js_code=%s&grant_type=authorization_code",
+                wechatMiniConfig.getAppId(),
+                wechatMiniConfig.getAppSecret(),
+                memberDTO.getCode());
+        String jsonStr = restTemplate.getForObject(url, String.class);
+        WechatCode2SessionRes res = objectMapper.readValue(jsonStr, WechatCode2SessionRes.class);
+        if (res == null || StringUtils.isNotBlank(res.getErrCode())) {
+            log.error("小程序授权失败" + res.getErrMsg());
+        }
+        String openId = res.getOpenid();
         if (StringUtils.isBlank(openId)) {
             throw new ReturnException("用户openId获取失败");
         }
         LambdaQueryWrapper<Member> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Member::getOpenid, memberDTO.getOpenid());
+        wrapper.eq(Member::getOpenid, openId);
         Member member = memberMapper.selectOne(wrapper);
         String token = UUID.randomUUID().toString().replace("-", "");
         if (member != null) {
@@ -83,17 +87,18 @@ public class MemberServiceImpl implements MemberService {
             newMember.setPhone(memberDTO.getPhone());
             try {
                 memberMapper.insert(newMember);
+                BeanUtils.copyProperties(newMember, memberDTO);
             } catch (Exception e) {
                 log.error("插入失败，原因:" + e.getMessage());
             }
         }
         memberDTO.setToken(token);
-        String oldToken = stringRedisTemplate.opsForValue().get(RedisConstant.LOGIN_OPENID + member.getOpenid());
+        String oldToken = stringRedisTemplate.opsForValue().get(RedisConstant.LOGIN_OPENID + memberDTO.getOpenid());
         if (StringUtils.isNotBlank(oldToken)) {
             stringRedisTemplate.delete(RedisConstant.LOGIN_TOKEN + oldToken);
         }
         //按照id存token，按照token存用户信息
-        stringRedisTemplate.opsForValue().set(RedisConstant.LOGIN_OPENID + member.getOpenid(), token);
+        stringRedisTemplate.opsForValue().set(RedisConstant.LOGIN_OPENID + memberDTO.getOpenid(), token);
         stringRedisTemplate.opsForValue().set(RedisConstant.LOGIN_TOKEN + token, objectMapper.writeValueAsString(memberDTO));
         return memberDTO;
     }
@@ -111,7 +116,7 @@ public class MemberServiceImpl implements MemberService {
 //            throw new ReturnException("请求已过期");
 //        }
 
-        String plainText = code + timestamp + nonce + wechatLoginProperties.getSignSecret();
+        String plainText = "code=" + code + "&timestamp=" + timestamp + "&nonce=" + nonce + "&secret=" + wechatLoginProperties.getSignSecret();
         String md5 = SecureUtil.md5(plainText);
         System.out.println(md5);
         //防重放
