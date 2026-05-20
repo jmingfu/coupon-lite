@@ -40,7 +40,7 @@ public class CouponAdminServiceImpl implements CouponAdminService {
     /**
      * token过期时间（7天）
      */
-    private static final long TOKEN_EXPIRE_DAYS = 7;
+    private static final long TOKEN_EXPIRE_HOURS = 2;
 
     /**
      * 用户名校验正则：只能包含字母数字下划线4-20位
@@ -108,15 +108,15 @@ public class CouponAdminServiceImpl implements CouponAdminService {
             stringRedisTemplate.opsForValue().set(
                     RedisConstant.LOGIN_OPENID + dto.getUsername(),
                     token,
-                    TOKEN_EXPIRE_DAYS,
-                    TimeUnit.DAYS
+                    TOKEN_EXPIRE_HOURS,
+                    TimeUnit.HOURS
             );
             // 按token存用户信息（与会员登录一致，统一使用MemberDTO）
             stringRedisTemplate.opsForValue().set(
                     RedisConstant.LOGIN_TOKEN + token,
                     objectMapper.writeValueAsString(memberDTO),
-                    TOKEN_EXPIRE_DAYS,
-                    TimeUnit.DAYS
+                    TOKEN_EXPIRE_HOURS,
+                    TimeUnit.HOURS
             );
 
             // 设置返回值
@@ -176,15 +176,15 @@ public class CouponAdminServiceImpl implements CouponAdminService {
             stringRedisTemplate.opsForValue().set(
                     RedisConstant.LOGIN_OPENID + dto.getUsername(),
                     token,
-                    TOKEN_EXPIRE_DAYS,
-                    TimeUnit.DAYS
+                    TOKEN_EXPIRE_HOURS,
+                    TimeUnit.HOURS
             );
             // 按token存用户信息（与会员登录一致，统一使用MemberDTO）
             stringRedisTemplate.opsForValue().set(
                     RedisConstant.LOGIN_TOKEN + token,
                     objectMapper.writeValueAsString(memberDTO),
-                    TOKEN_EXPIRE_DAYS,
-                    TimeUnit.DAYS
+                    TOKEN_EXPIRE_HOURS,
+                    TimeUnit.HOURS
             );
 
             // 设置返回值

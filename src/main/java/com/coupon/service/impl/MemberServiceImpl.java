@@ -104,8 +104,8 @@ public class MemberServiceImpl implements MemberService {
             stringRedisTemplate.delete(RedisConstant.LOGIN_TOKEN + oldToken);
         }
         //按照id存token，按照token存用户信息
-        stringRedisTemplate.opsForValue().set(RedisConstant.LOGIN_OPENID + memberDTO.getOpenid(), token);
-        stringRedisTemplate.opsForValue().set(RedisConstant.LOGIN_TOKEN + token, objectMapper.writeValueAsString(memberDTO));
+        stringRedisTemplate.opsForValue().set(RedisConstant.LOGIN_OPENID + memberDTO.getOpenid(), token, 2, TimeUnit.HOURS);
+        stringRedisTemplate.opsForValue().set(RedisConstant.LOGIN_TOKEN + token, objectMapper.writeValueAsString(memberDTO), 2, TimeUnit.HOURS);
         return memberDTO;
     }
 
