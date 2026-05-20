@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>会员管理 - 优惠券管理系统</title>
+    <link rel="stylesheet" href="/css/common.css">
+</head>
+<body>
+<div class="navbar">
+    <div class="logo">优惠券管理系统</div>
+    <div class="nav-links">
+        <a href="/coupon.html">优惠券管理</a>
+        <a href="/member.html" class="active">会员管理</a>
+        <a href="/verification.html">核销记录</a>
+    </div>
+    <div class="user-info"><span id="userName"></span><a href="javascript:void(0)" onclick="logout()">退出</a></div>
+</div>
+<div class="container">
+    <div class="card">
+        <div class="search-bar">
+            <div class="form-group">
+                <label>昵称</label>
+                <input type="text" id="searchNickname" placeholder="昵称">
+            </div>
+            <div class="form-group">
+                <label>手机号</label>
+                <input type="text" id="searchPhone" placeholder="手机号">
+            </div>
+            <div class="form-group">
+                <label>状态</label>
+                <select id="searchStatus">
+                    <option value="">全部</option>
+                    <option value="NORMAL">正常</option>
+                    <option value="DISABLED">禁用</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="loadData(1)">查询</button>
+            <button class="btn" onclick="resetSearch()">重置</button>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>昵称</th>
+                    <th>手机号</th>
+                    <th>状态</th>
+                    <th>注册时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+        <div class="pagination" id="pagination"></div>
+    </div>
+</div>
+
+<div id="modal" style="display:none"></div>
+
+<script src="/js/common.js"></script>
+<script>
+Auth.checkLogin();
+document.getElementById('userName').textContent = (Auth.getUser() || {}).nickname || '管理员';
+
+let currentPage = 1;
+
+function loadData(page) {
+    currentPage = page || 1;
+    const params = {
+        pageNum: currentPage,
+        pageSize: 10,
+        nickname: document.getElementById('searchNickname').value.trim() || undefined,
+        phone: document.getElementById('searchPhone').value.trim() || undefined,
+    };
+    request.get('/api/v1/member/page', params).then(res => {
+        renderTable(res.data.records);
+        renderPagination(res.data);
+    });
+}
+
+function renderTable(records) {
+    const tbody = document.getElementById('tableBody');
+    if (!records || records.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#999">暂无数据</td></tr>';
+        return;
+    }
+    tbody.innerHTML = records.map(r => {
+        const statusTag = r.status === 'DISABLED'
+            ? '<span class="tag tag-red">禁用</span>'
+            : '<span class="tag tag-green">正常</span>';
+        const actionBtn = r.status === 'DISABLED'
+            ? `<button class="btn btn-sm btn-success" onclick="updateStatus(${r.id}, 'NORMAL')">启用</button>`
+            : `<button class="btn btn-sm btn-danger" onclick="updateStatus(${r.id}, 'DISABLED')">禁用</button>`;
+        return `<tr>
+            <td>${r.id}</td>
+            <td>${r.nickname || '-'}</td>
+            <td>${r.phone || '-'}</td>
+            <td>${statusTag}</td>
+            <td>${formatDate(r.createTime)}</td>
+            <td>
+                <button class="btn btn-sm" onclick="showDetail(${r.id})">详情</button>
+                ${actionBtn}
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function renderPagination(page) {
+    const total = page.total || 0;
+    const pages = page.pages || 1;
+    const current = page.current || 1;
+    let html = `<span>共 ${total} 条</span><div class="page-btns">`;
+    html += `<button ${current <= 1 ? 'disabled' : ''} onclick="loadData(${current - 1})">上一页</button>`;
+    for (let i = 1; i <= pages; i++) {
+        html += `<button class="${i === current ? 'active' : ''}" onclick="loadData(${i})">${i}</button>`;
+    }
+    html += `<button ${current >= pages ? 'disabled' : ''} onclick="loadData(${current + 1})">下一页</button></div>`;
+    document.getElementById('pagination').innerHTML = html;
+}
+
+function resetSearch() {
+    document.getElementById('searchNickname').value = '';
+    document.getElementById('searchPhone').value = '';
+    document.getElementById('searchStatus').value = '';
+    loadData(1);
+}
+
+function updateStatus(memberId, status) {
+    const action = status === 'DISABLED' ? '禁用' : '启用';
+    if (!confirm(`确定${action}该会员？`)) return;
+    request.post('/api/v1/admin/member/status', { memberId, status }).then(() => {
+        showToast(`${action}成功`, 'success');
+        loadData(currentPage);
+    }).catch(err => showToast(err.message, 'error'));
+}
+
+function showDetail(id) {
+    request.get('/api/v1/member', { id }).then(res => {
+        const r = res.data;
+        document.getElementById('modal').style.display = 'block';
+        document.getElementById('modal').innerHTML = `<div class="modal-overlay" onclick="closeModal(event)">
+            <div class="modal" onclick="event.stopPropagation()">
+                <div class="modal-header"><span>会员详情</span><span class="close" onclick="closeModal()">&times;</span></div>
+                <div class="modal-body">
+                    <dl class="detail-grid">
+                        <dt>ID</dt><dd>${r.id}</dd>
+                        <dt>昵称</dt><dd>${r.nickname || '-'}</dd>
+                        <dt>手机号</dt><dd>${r.phone || '-'}</dd>
+                        <dt>OpenID</dt><dd>${r.openid || '-'}</dd>
+                        <dt>余额</dt><dd>${r.balance != null ? '¥' + r.balance : '-'}</dd>
+                        <dt>积分</dt><dd>${r.points != null ? r.points : '-'}</dd>
+                        <dt>状态</dt><dd>${r.status === 'DISABLED' ? '<span class="tag tag-red">禁用</span>' : '<span class="tag tag-green">正常</span>'}</dd>
+                        <dt>注册时间</dt><dd>${formatDate(r.createTime)}</dd>
+                        <dt>更新时间</dt><dd>${formatDate(r.updateTime)}</dd>
+                    </dl>
+                </div>
+                <div class="modal-footer"><button class="btn" onclick="closeModal()">关闭</button></div>
+            </div>
+        </div>`;
+    });
+}
+
+function closeModal(e) {
+    if (e && e.target !== e.currentTarget) return;
+    document.getElementById('modal').style.display = 'none';
+}
+
+function logout() { Auth.logout(); window.location.href = '/login.html'; }
+
+function showToast(msg, type) {
+    const t = document.createElement('div');
+    t.className = 'toast toast-' + type;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+}
+
+loadData(1);
+</script>
+</body>
+</html>

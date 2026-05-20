@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.coupon.common.enums.CouponStatusEnum;
 import com.coupon.common.exception.ReturnException;
+import com.coupon.common.util.CouponValidUtil;
 import com.coupon.common.util.MemberUtil;
 import com.coupon.dto.MemberDTO;
 import com.coupon.dto.VerificationDTO;
@@ -63,10 +64,7 @@ public class VerificationServiceImpl implements VerificationService {
         }
 
         // 检查优惠券是否过期
-        Date now = new Date();
-        if (now.after(couponTemplate.getValidEndTime())) {
-            throw new ReturnException("优惠券已过期");
-        }
+        CouponValidUtil.checkValid(couponTemplate);
 
         // 检查用户是否领取过该优惠券
         LambdaQueryWrapper<MemberCoupon> couponWrapper = new LambdaQueryWrapper<>();
@@ -168,6 +166,12 @@ public class VerificationServiceImpl implements VerificationService {
             }
         }
 
+        // 检查优惠券是否在有效期内
+        CouponTemplate couponTemplate = couponMapper.selectById(record.getTemplateId());
+        if (couponTemplate != null) {
+            CouponValidUtil.checkValid(couponTemplate);
+        }
+
         // 更新优惠券状态为已核销（状态流转：待核销->已核销）
         memberCoupon.setStatus(CouponStatusEnum.VERIFIED);
         memberCouponMapper.updateById(memberCoupon);
@@ -176,9 +180,6 @@ public class VerificationServiceImpl implements VerificationService {
         record.setVerifier("STAFF"); // 店员
         record.setVerificationTime(new Date());
         verificationMapper.updateById(record);
-
-        // 查询优惠券模板信息
-        CouponTemplate couponTemplate = couponMapper.selectById(record.getTemplateId());
 
         // 返回核销信息
         VerificationDTO dto = new VerificationDTO();

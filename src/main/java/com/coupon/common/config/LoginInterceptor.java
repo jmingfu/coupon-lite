@@ -39,11 +39,18 @@ public class LoginInterceptor implements HandlerInterceptor {
             return false;
         }
         MemberDTO dto = objectMapper.readValue(json, MemberDTO.class);
-        String loginToken = redisTemplate.opsForValue().get(RedisConstant.LOGIN_OPENID + dto.getOpenid());
         if(dto.getNickname().equals("admin")&&env.equals("test")){
             //如果当前登录用户是admin并且是测试环境，就直接放行
             return true;
         }
+        // 管理员登录使用nickname作为key，会员登录使用openid作为key
+        String identityKey;
+        if (dto.getAdminId() != null) {
+            identityKey = RedisConstant.LOGIN_OPENID + dto.getNickname();
+        } else {
+            identityKey = RedisConstant.LOGIN_OPENID + dto.getOpenid();
+        }
+        String loginToken = redisTemplate.opsForValue().get(identityKey);
         if(!token.equals(loginToken)){
             response.getWriter().write(objectMapper.writeValueAsString(Result.fail(CodeEnum.Unauthorized, "登录凭证已失效")));
             return false;

@@ -46,7 +46,7 @@ public class CouponController {
     }
 
     @PostMapping("/receive")
-    @ApiLimit
+    @ApiLimit(urlLimit = 40)
     public Result<CouponDTO> receiveCoupon(@RequestParam Long id) {
         return Result.success(couponService.receiveCoupon(id));
     }

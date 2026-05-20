@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>优惠券管理 - 优惠券管理系统</title>
+    <link rel="stylesheet" href="/css/common.css">
+</head>
+<body>
+<div class="navbar">
+    <div class="logo">优惠券管理系统</div>
+    <div class="nav-links">
+        <a href="/coupon.html" class="active">优惠券管理</a>
+        <a href="/member.html">会员管理</a>
+        <a href="/verification.html">核销记录</a>
+    </div>
+    <div class="user-info"><span id="userName"></span><a href="javascript:void(0)" onclick="logout()">退出</a></div>
+</div>
+<div class="container">
+    <div class="card">
+        <div class="search-bar">
+            <div class="form-group">
+                <label>优惠券名称</label>
+                <input type="text" id="searchName" placeholder="优惠券名称">
+            </div>
+            <div class="form-group">
+                <label>类型</label>
+                <select id="searchType">
+                    <option value="">全部</option>
+                    <option value="FULL_REDUCTION">满减</option>
+                    <option value="DISCOUNT">折扣</option>
+                    <option value="NO_THRESHOLD">无门槛</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="loadData(1)">查询</button>
+            <button class="btn" onclick="resetSearch()">重置</button>
+            <button class="btn btn-success" onclick="openAddModal()">新增优惠券</button>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>名称</th>
+                    <th>类型</th>
+                    <th>满减门槛</th>
+                    <th>减免金额</th>
+                    <th>折扣率</th>
+                    <th>总量</th>
+                    <th>剩余</th>
+                    <th>有效期</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+        <div class="pagination" id="pagination"></div>
+    </div>
+</div>
+
+<div id="modal" style="display:none"></div>
+
+<script src="/js/common.js"></script>
+<script>
+Auth.checkLogin();
+document.getElementById('userName').textContent = (Auth.getUser() || {}).nickname || '管理员';
+
+let currentPage = 1;
+
+function loadData(page) {
+    currentPage = page || 1;
+    const params = { pageNum: currentPage, pageSize: 10, name: document.getElementById('searchName').value.trim() || undefined };
+    const type = document.getElementById('searchType').value;
+    if (type) params.type = type;
+    request.get('/api/v1/coupon/page', params).then(res => {
+        renderTable(res.data.records);
+        renderPagination(res.data);
+    });
+}
+
+function renderTable(records) {
+    const tbody = document.getElementById('tableBody');
+    if (!records || records.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#999">暂无数据</td></tr>';
+        return;
+    }
+    tbody.innerHTML = records.map(r => `<tr>
+        <td>${r.id}</td>
+        <td>${r.name || '-'}</td>
+        <td><span class="tag tag-blue">${CouponType[r.type] || r.type}</span></td>
+        <td>${r.fullAmount != null ? '¥' + r.fullAmount : '-'}</td>
+        <td>${r.discountAmount != null ? '¥' + r.discountAmount : '-'}</td>
+        <td>${r.discountRate != null ? r.discountRate : '-'}</td>
+        <td>${r.totalCount != null ? r.totalCount : '-'}</td>
+        <td>${r.remainCount != null ? r.remainCount : '-'}</td>
+        <td>${formatShortDate(r.validStartTime)} ~ ${formatShortDate(r.validEndTime)}</td>
+        <td>
+            <button class="btn btn-sm" onclick="openEditModal(${r.id})">编辑</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteCoupon(${r.id})">删除</button>
+        </td>
+    </tr>`).join('');
+}
+
+function renderPagination(page) {
+    const total = page.total || 0;
+    const pages = page.pages || 1;
+    const current = page.current || 1;
+    let html = `<span>共 ${total} 条</span><div class="page-btns">`;
+    html += `<button ${current <= 1 ? 'disabled' : ''} onclick="loadData(${current - 1})">上一页</button>`;
+    for (let i = 1; i <= pages; i++) {
+        html += `<button class="${i === current ? 'active' : ''}" onclick="loadData(${i})">${i}</button>`;
+    }
+    html += `<button ${current >= pages ? 'disabled' : ''} onclick="loadData(${current + 1})">下一页</button></div>`;
+    document.getElementById('pagination').innerHTML = html;
+}
+
+function resetSearch() {
+    document.getElementById('searchName').value = '';
+    document.getElementById('searchType').value = '';
+    loadData(1);
+}
+
+function openAddModal() {
+    showModal('新增优惠券', {});
+}
+
+function openEditModal(id) {
+    request.get('/api/v1/coupon', { id }).then(res => showModal('编辑优惠券', res.data));
+}
+
+function showModal(title, data) {
+    document.getElementById('modal').style.display = 'block';
+    const curType = data.type || 'FULL_REDUCTION';
+    document.getElementById('modal').innerHTML = `<div class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header"><span>${title}</span><span class="close" onclick="closeModal()">&times;</span></div>
+            <div class="modal-body">
+                <input type="hidden" id="mId" value="${data.id || ''}">
+                <div class="form-item"><label><span class="required">*</span>优惠券名称</label><input type="text" id="mName" value="${data.name || ''}"></div>
+                <div class="form-item"><label><span class="required">*</span>类型</label>
+                    <select id="mType" onchange="onTypeChange()">
+                        <option value="FULL_REDUCTION" ${curType === 'FULL_REDUCTION' ? 'selected' : ''}>满减</option>
+                        <option value="DISCOUNT" ${curType === 'DISCOUNT' ? 'selected' : ''}>折扣</option>
+                        <option value="NO_THRESHOLD" ${curType === 'NO_THRESHOLD' ? 'selected' : ''}>无门槛</option>
+                    </select>
+                </div>
+                <div class="form-item type-field type-FULL_REDUCTION" style="display:${curType === 'FULL_REDUCTION' ? '' : 'none'}"><label><span class="required">*</span>满减门槛</label><input type="number" step="0.01" id="mFullAmount" value="${data.fullAmount != null ? data.fullAmount : ''}" placeholder="满减券必填"></div>
+                <div class="form-item type-field type-FULL_REDUCTION type-NO_THRESHOLD" style="display:${curType === 'FULL_REDUCTION' || curType === 'NO_THRESHOLD' ? '' : 'none'}"><label><span class="required">*</span>减免金额</label><input type="number" step="0.01" id="mDiscountAmount" value="${data.discountAmount != null ? data.discountAmount : ''}" placeholder="满减/无门槛必填"></div>
+                <div class="form-item type-field type-DISCOUNT" style="display:${curType === 'DISCOUNT' ? '' : 'none'}"><label><span class="required">*</span>折扣率</label><input type="number" step="0.01" id="mDiscountRate" value="${data.discountRate != null ? data.discountRate : ''}" placeholder="如0.8表示8折"></div>
+                <div class="form-item"><label><span class="required">*</span>发放总量</label><input type="number" id="mTotalCount" value="${data.totalCount || ''}"></div>
+                <div class="form-item"><label>有效期开始</label><input type="datetime-local" id="mValidStart" min="${new Date().toISOString().slice(0,16)}" value="${data.validStartTime ? data.validStartTime.slice(0, 16) : ''}"></div>
+                <div class="form-item"><label>有效期结束</label><input type="datetime-local" id="mValidEnd" min="${new Date().toISOString().slice(0,16)}" value="${data.validEndTime ? data.validEndTime.slice(0, 16) : ''}"></div>
+            </div>
+            <div class="modal-footer"><button class="btn" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="saveCoupon()">保存</button></div>
+        </div>
+    </div>`;
+}
+
+function onTypeChange() {
+    const type = document.getElementById('mType').value;
+    document.querySelectorAll('.type-field').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.type-' + type).forEach(el => el.style.display = '');
+    document.getElementById('mFullAmount').value = '';
+    document.getElementById('mDiscountAmount').value = '';
+    document.getElementById('mDiscountRate').value = '';
+}
+
+function closeModal(e) {
+    if (e && e.target !== e.currentTarget) return;
+    document.getElementById('modal').style.display = 'none';
+}
+
+function saveCoupon() {
+    const data = {
+        id: document.getElementById('mId').value || undefined,
+        name: document.getElementById('mName').value.trim(),
+        type: document.getElementById('mType').value,
+        fullAmount: document.getElementById('mFullAmount').value || undefined,
+        discountAmount: document.getElementById('mDiscountAmount').value || undefined,
+        discountRate: document.getElementById('mDiscountRate').value || undefined,
+        totalCount: document.getElementById('mTotalCount').value || undefined,
+        validStartTime: document.getElementById('mValidStart').value || undefined,
+        validEndTime: document.getElementById('mValidEnd').value || undefined,
+    };
+    if (!data.name) { showToast('请填写优惠券名称', 'error'); return; }
+    if (!data.totalCount) { showToast('请填写发放总量', 'error'); return; }
+    if (data.type === 'FULL_REDUCTION') {
+        if (!data.fullAmount) { showToast('满减券请填写满减门槛', 'error'); return; }
+        if (data.discountRate) { showToast('满减券不能填写折扣率', 'error'); return; }
+    }
+    if (data.type === 'DISCOUNT') {
+        if (!data.discountRate) { showToast('折扣券请填写折扣率', 'error'); return; }
+        if (data.fullAmount) { showToast('折扣券不能填写满减门槛', 'error'); return; }
+        if (data.discountAmount) { showToast('折扣券不能填写减免金额', 'error'); return; }
+    }
+    if (data.type === 'NO_THRESHOLD') {
+        if (!data.discountAmount) { showToast('无门槛券请填写减免金额', 'error'); return; }
+        if (data.fullAmount) { showToast('无门槛券不能填写满减门槛', 'error'); return; }
+        if (data.discountRate) { showToast('无门槛券不能填写折扣率', 'error'); return; }
+    }
+    if (data.validStartTime && new Date(data.validStartTime) < new Date()) { showToast('开始时间不能早于当前时间', 'error'); return; }
+    if (data.validEndTime && new Date(data.validEndTime) < new Date()) { showToast('结束时间不能早于当前时间', 'error'); return; }
+    if (data.validStartTime && data.validEndTime && new Date(data.validStartTime) > new Date(data.validEndTime)) { showToast('开始时间不能晚于结束时间', 'error'); return; }
+    request.post('/api/v1/coupon', data).then(() => {
+        showToast('保存成功', 'success');
+        closeModal();
+        loadData(currentPage);
+    }).catch(err => showToast(err.message, 'error'));
+}
+
+function deleteCoupon(id) {
+    if (!confirm('确定删除该优惠券？')) return;
+    request.delete('/api/v1/coupon', { id }).then(() => {
+        showToast('删除成功', 'success');
+        loadData(currentPage);
+    }).catch(err => showToast(err.message, 'error'));
+}
+
+function logout() { Auth.logout(); window.location.href = '/login.html'; }
+
+function showToast(msg, type) {
+    const t = document.createElement('div');
+    t.className = 'toast toast-' + type;
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+}
+
+loadData(1);
+</script>
+</body>
+</html>

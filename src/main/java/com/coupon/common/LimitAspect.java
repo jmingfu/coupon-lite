@@ -17,18 +17,15 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.servlet.http.HttpServletRequest;
 import java.util.concurrent.TimeUnit;
 
-/**
- * 基于SpringBoot框架的个人练手项目-
- *
- * @author JMF
- * @date 2026-04-06 08:47
- * @date 2026-04-06
- */
-
 @Aspect
 @Component
 @Order(1)
 public class LimitAspect {
+
+    private static final int OPEN_LIMIT = 10;
+
+    private static final long LIMIT_WINDOW_SECONDS = 1;
+
     @Autowired
     private StringRedisTemplate redisTemplate;
 
@@ -40,52 +37,56 @@ public class LimitAspect {
     public void before(JoinPoint joinPoint) {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         ApiLimit apiLimit = signature.getMethod().getAnnotation(ApiLimit.class);
-        int openCount = apiLimit.openLimit();
-        int ipCount = apiLimit.ipLimit();
-        String token = getToken(), ip = getIp();
-        String key = "";
-        Long count;
-        try {
-            if (token != null) {
-                key = "limit:openId:" + token;
-                count = redisTemplate.opsForValue().increment(key, 1);
-                if (count == 1) {
-                    redisTemplate.expire(key, 1, TimeUnit.SECONDS);
-                }
-                if (count > openCount) {
-                    throw new ReturnException("请求过于频繁");
-                }
-            } else {
-                key = "limit:ip:" + ip;
-                count = redisTemplate.opsForValue().increment(key, 1);
-                if (count == 1) {
-                    redisTemplate.expire(key, 1, TimeUnit.SECONDS);
-                }
-                if (count > ipCount) {
-                    throw new ReturnException("网络繁忙，请稍后重试");
-                }
-            }
-        } catch (Exception e) {
-            throw new ReturnException("服务器出错,错误信息,aop:" + e.getMessage());
+        int urlLimitCount = apiLimit.urlLimit();
+
+        HttpServletRequest request = getRequest();
+        String method = request.getMethod();
+        String uri = request.getRequestURI();
+
+        checkUrlLimit(method, uri, urlLimitCount);
+
+        String token = getToken();
+        if (token != null) {
+            checkOpenLimit(token);
         }
     }
 
-    private String getIp() {
+    private void checkUrlLimit(String method, String uri, int urlLimitCount) {
+        String key = "limit:url:" + method + ":" + uri;
+        Long count = redisTemplate.opsForValue().increment(key, 1);
+        if (count != null && count == 1) {
+            redisTemplate.expire(key, LIMIT_WINDOW_SECONDS, TimeUnit.SECONDS);
+        }
+        if (count != null && count > urlLimitCount) {
+            throw new ReturnException("接口访问过于频繁，请稍后重试");
+        }
+    }
+
+    private void checkOpenLimit(String token) {
+        String key = "limit:openId:" + token;
+        Long count = redisTemplate.opsForValue().increment(key, 1);
+        if (count != null && count == 1) {
+            redisTemplate.expire(key, LIMIT_WINDOW_SECONDS, TimeUnit.SECONDS);
+        }
+        if (count != null && count > OPEN_LIMIT) {
+            throw new ReturnException("请求过于频繁");
+        }
+    }
+
+    private HttpServletRequest getRequest() {
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        assert attributes != null;
-        HttpServletRequest request = attributes.getRequest();
-        return request.getRemoteAddr();
+        if (attributes == null) {
+            throw new ReturnException("无法获取请求上下文");
+        }
+        return attributes.getRequest();
     }
 
     private String getToken() {
-        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        assert attributes != null;
-        HttpServletRequest request = attributes.getRequest();
+        HttpServletRequest request = getRequest();
         String token = request.getHeader("Authorization");
         if (token != null && token.startsWith("Bearer")) {
             token = token.substring(7);
         }
         return token;
     }
-
 }

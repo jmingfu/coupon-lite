@@ -8,6 +8,7 @@ import com.coupon.common.RedisConstant;
 import com.coupon.common.enums.CouponStatusEnum;
 import com.coupon.common.enums.CouponTypeEnum;
 import com.coupon.common.exception.ReturnException;
+import com.coupon.common.util.CouponValidUtil;
 import com.coupon.common.util.MemberUtil;
 import com.coupon.dto.CouponDTO;
 import com.coupon.dto.MemberDTO;
@@ -48,11 +49,10 @@ public class CouponServiceImpl implements CouponService {
 
     @Override
     public CouponDTO addOrEdit(CouponDTO couponDTO) throws Exception {
+        validateCoupon(couponDTO);
         CouponTemplate coupon = new CouponTemplate();
         BeanUtils.copyProperties(couponDTO, coupon);
-        if (couponDTO.getType().equals(CouponTypeEnum.FULL_REDUCTION) && (Objects.isNull(couponDTO.getFullAmount()))) {
-            throw new ReturnException("请输入满减门槛");
-        }
+        coupon.setRemainCount(couponDTO.getTotalCount());
         if (couponDTO.getId() == null) {
             couponMapper.insert(coupon);
         } else {
@@ -72,8 +72,7 @@ public class CouponServiceImpl implements CouponService {
 
     @Override
     public Boolean delete(Long id) {
-        Boolean success = couponMapper.deleteById(id) == 0;
-        // 清除缓存
+        Boolean success = couponMapper.deleteById(id) > 0;
         if (success) {
             redisTemplate.opsForSet().remove(RedisConstant.COUPON_IDS, String.valueOf(id));
             redisTemplate.delete(RedisConstant.ALL_COUPON + id);
@@ -92,7 +91,7 @@ public class CouponServiceImpl implements CouponService {
                 Boolean.FALSE)) {
             throw new ReturnException("优惠券不存在");
         }
-        String stringCoupon = redisTemplate.opsForValue().get(RedisConstant.ALL_COUPON);
+        String stringCoupon = redisTemplate.opsForValue().get(RedisConstant.ALL_COUPON + id);
         if (StringUtils.isNotBlank(stringCoupon)) {
             return objectMapper.readValue(stringCoupon, CouponDTO.class);
         }
@@ -100,7 +99,8 @@ public class CouponServiceImpl implements CouponService {
         CouponDTO couponDTO = new CouponDTO();
         BeanUtils.copyProperties(couponTemplate, couponDTO);
         // 存入redis
-        redisTemplate.opsForValue().set(RedisConstant.ALL_COUPON, objectMapper.writeValueAsString(couponDTO));
+        redisTemplate.opsForValue().set(RedisConstant.ALL_COUPON + couponTemplate.getId(),
+                objectMapper.writeValueAsString(couponDTO));     
         return couponDTO;
     }
 
@@ -110,6 +110,24 @@ public class CouponServiceImpl implements CouponService {
         LambdaQueryWrapper<CouponTemplate> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StringUtils.isNotEmpty(dto.getName()), CouponTemplate::getName, dto.getName());
         wrapper.eq(Objects.nonNull(dto.getType()), CouponTemplate::getType, dto.getType());
+
+        // 判断是否为管理员：管理员可查看所有券，普通用户/未登录只看时间范围内的券
+        boolean isAdmin = false;
+        try {
+            MemberDTO memberInfo = MemberUtil.getMemberInfo();
+            if (memberInfo != null && memberInfo.getAdminId() != null) {
+                isAdmin = true;
+            }
+        } catch (Exception ignored) {
+            // 未登录用户，忽略异常
+        }
+
+        if (!isAdmin) {
+            Date now = new Date();
+            wrapper.le(CouponTemplate::getValidStartTime, now);
+            wrapper.ge(CouponTemplate::getValidEndTime, now);
+        }
+
         wrapper.ge(Objects.nonNull(dto.getValidStartTime()) && Objects.nonNull(dto.getValidEndTime()),
                 CouponTemplate::getValidStartTime, dto.getValidStartTime());
         wrapper.le(Objects.nonNull(dto.getValidStartTime()) && Objects.nonNull(dto.getValidEndTime()),
@@ -142,6 +160,7 @@ public class CouponServiceImpl implements CouponService {
                 throw new ReturnException("优惠券已领完");
             }
             CouponTemplate couponTemplate = couponMapper.selectById(couponId);
+            CouponValidUtil.checkValid(couponTemplate);
             MemberCoupon memberCoupon = new MemberCoupon();
             memberCoupon.setMemberId(memberInfo.getId());
             memberCoupon.setTemplateId(couponId);
@@ -166,4 +185,45 @@ public class CouponServiceImpl implements CouponService {
     // public List<CouponDTO> generateCode(Long couponId) {
     //
     // }
+
+    private void validateCoupon(CouponDTO couponDTO) {
+        CouponTypeEnum type = couponDTO.getType();
+        if (type == null) {
+            throw new ReturnException("请选择优惠券类型");
+        }
+        switch (type) {
+            case FULL_REDUCTION:
+                if (Objects.isNull(couponDTO.getFullAmount())) {
+                    throw new ReturnException("满减券请输入满减门槛");
+                }
+                couponDTO.setDiscountRate(null);
+                break;
+            case DISCOUNT:
+                if (Objects.isNull(couponDTO.getDiscountRate())) {
+                    throw new ReturnException("折扣券请输入折扣率");
+                }
+                couponDTO.setFullAmount(null);
+                couponDTO.setDiscountAmount(null);
+                break;
+            case NO_THRESHOLD:
+                if (Objects.isNull(couponDTO.getDiscountAmount())) {
+                    throw new ReturnException("无门槛券请输入减免金额");
+                }
+                couponDTO.setFullAmount(null);
+                couponDTO.setDiscountRate(null);
+                break;
+            default:
+                throw new ReturnException("不支持的优惠券类型");
+        }
+        if (couponDTO.getValidStartTime() != null && couponDTO.getValidStartTime().before(new Date())) {
+            throw new ReturnException("开始时间不能早于当前时间");
+        }
+        if (couponDTO.getValidEndTime() != null && couponDTO.getValidEndTime().before(new Date())) {
+            throw new ReturnException("结束时间不能早于当前时间");
+        }
+        if (couponDTO.getValidStartTime() != null && couponDTO.getValidEndTime() != null
+                && couponDTO.getValidStartTime().after(couponDTO.getValidEndTime())) {
+            throw new ReturnException("开始时间不能晚于结束时间");
+        }
+    }
 }

@@ -6,9 +6,9 @@
 
     <update id="decreaseAmount">
         update coupon_template
-        set full_amount=full_amount - 1
+        set remain_count = remain_count - 1
         where id = #{id}
-          and full_amount > 0
+          and remain_count > 0
     </update>
     <select id="getMyCoupons" resultType="com.coupon.dto.CouponDTO">
         select mc.member_id,
@@ -20,7 +20,7 @@
                ct.*
         from member_coupon mc
                  inner join coupon_template ct
-                            on mc.template_id = mc.id
+                            on mc.template_id = ct.id
         where mc.member_id = #{memberId}
     </select>
 
