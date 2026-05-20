@@ -57,7 +57,7 @@
     </div>
 </div>
 
-<div id="modal" style="display:none"></div>
+<div id="modal" style="display:none;pointer-events:none"></div>
 
 <script src="/js/common.js"></script>
 <script>
@@ -124,11 +124,14 @@ function openAddModal() {
 }
 
 function openEditModal(id) {
-    request.get('/api/v1/coupon', { id }).then(res => showModal('编辑优惠券', res.data));
+    request.get('/api/v1/coupon', { id }).then(res => showModal('编辑优惠券', res.data))
+        .catch(err => showToast(err.message || '加载失败', 'error'));
 }
 
 function showModal(title, data) {
-    document.getElementById('modal').style.display = 'block';
+    const modalEl = document.getElementById('modal');
+    modalEl.style.display = 'block';
+    modalEl.style.pointerEvents = 'auto';
     const curType = data.type || 'FULL_REDUCTION';
     document.getElementById('modal').innerHTML = `<div class="modal-overlay" onclick="closeModal(event)">
         <div class="modal" onclick="event.stopPropagation()">
@@ -147,12 +150,16 @@ function showModal(title, data) {
                 <div class="form-item type-field type-FULL_REDUCTION type-NO_THRESHOLD" style="display:${curType === 'FULL_REDUCTION' || curType === 'NO_THRESHOLD' ? '' : 'none'}"><label><span class="required">*</span>减免金额</label><input type="number" step="0.01" id="mDiscountAmount" value="${data.discountAmount != null ? data.discountAmount : ''}" placeholder="满减/无门槛必填"></div>
                 <div class="form-item type-field type-DISCOUNT" style="display:${curType === 'DISCOUNT' ? '' : 'none'}"><label><span class="required">*</span>折扣率</label><input type="number" step="0.01" id="mDiscountRate" value="${data.discountRate != null ? data.discountRate : ''}" placeholder="如0.8表示8折"></div>
                 <div class="form-item"><label><span class="required">*</span>发放总量</label><input type="number" id="mTotalCount" value="${data.totalCount || ''}"></div>
-                <div class="form-item"><label>有效期开始</label><input type="datetime-local" id="mValidStart" min="${new Date().toISOString().slice(0,16)}" value="${data.validStartTime ? data.validStartTime.slice(0, 16) : ''}"></div>
-                <div class="form-item"><label>有效期结束</label><input type="datetime-local" id="mValidEnd" min="${new Date().toISOString().slice(0,16)}" value="${data.validEndTime ? data.validEndTime.slice(0, 16) : ''}"></div>
+                <div class="form-item"><label><span class="required" id="startRequired" style="display:none">*</span>有效期开始</label><input type="datetime-local" id="mValidStart" min="${new Date().toISOString().slice(0,16)}" value="${data.validStartTime ? data.validStartTime.slice(0, 16) : ''}"></div>
+                <div class="form-item"><label><span class="required" id="endRequired" style="display:none">*</span>有效期结束</label><input type="datetime-local" id="mValidEnd" min="${new Date().toISOString().slice(0,16)}" value="${data.validEndTime ? data.validEndTime.slice(0, 16) : ''}"></div>
             </div>
             <div class="modal-footer"><button class="btn" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="saveCoupon()">保存</button></div>
         </div>
     </div>`;
+    if (!data.id) {
+        document.getElementById('startRequired').style.display = '';
+        document.getElementById('endRequired').style.display = '';
+    }
 }
 
 function onTypeChange() {
@@ -166,7 +173,9 @@ function onTypeChange() {
 
 function closeModal(e) {
     if (e && e.target !== e.currentTarget) return;
-    document.getElementById('modal').style.display = 'none';
+    const modalEl = document.getElementById('modal');
+    modalEl.style.display = 'none';
+    modalEl.style.pointerEvents = 'none';
 }
 
 function saveCoupon() {
@@ -183,23 +192,38 @@ function saveCoupon() {
     };
     if (!data.name) { showToast('请填写优惠券名称', 'error'); return; }
     if (!data.totalCount) { showToast('请填写发放总量', 'error'); return; }
+    function toMinute(d) { d.setSeconds(0,0); return d; }
     if (data.type === 'FULL_REDUCTION') {
         if (!data.fullAmount) { showToast('满减券请填写满减门槛', 'error'); return; }
-        if (data.discountRate) { showToast('满减券不能填写折扣率', 'error'); return; }
     }
     if (data.type === 'DISCOUNT') {
         if (!data.discountRate) { showToast('折扣券请填写折扣率', 'error'); return; }
-        if (data.fullAmount) { showToast('折扣券不能填写满减门槛', 'error'); return; }
-        if (data.discountAmount) { showToast('折扣券不能填写减免金额', 'error'); return; }
+        if (!/^(0(\.\d)?|1(\.0)?)$/.test(data.discountRate)) { showToast('折扣率须为0-1的一位小数', 'error'); return; }
     }
     if (data.type === 'NO_THRESHOLD') {
         if (!data.discountAmount) { showToast('无门槛券请填写减免金额', 'error'); return; }
-        if (data.fullAmount) { showToast('无门槛券不能填写满减门槛', 'error'); return; }
-        if (data.discountRate) { showToast('无门槛券不能填写折扣率', 'error'); return; }
     }
-    if (data.validStartTime && new Date(data.validStartTime) < new Date()) { showToast('开始时间不能早于当前时间', 'error'); return; }
-    if (data.validEndTime && new Date(data.validEndTime) < new Date()) { showToast('结束时间不能早于当前时间', 'error'); return; }
-    if (data.validStartTime && data.validEndTime && new Date(data.validStartTime) > new Date(data.validEndTime)) { showToast('开始时间不能晚于结束时间', 'error'); return; }
+    if (data.id) {
+        if ((data.validStartTime && !data.validEndTime) || (!data.validStartTime && data.validEndTime)) {
+            showToast('开始时间和结束时间需同时填写', 'error'); return;
+        }
+        if (data.validStartTime && data.validEndTime && toMinute(new Date(data.validStartTime)) >= toMinute(new Date(data.validEndTime))) {
+            showToast('开始时间必须早于结束时间', 'error'); return;
+        }
+    } else {
+        if (!data.validStartTime || !data.validEndTime) {
+            showToast('请填写有效期', 'error'); return;
+        }
+        if (toMinute(new Date(data.validStartTime)) >= toMinute(new Date(data.validEndTime))) {
+            showToast('开始时间必须早于结束时间', 'error'); return;
+        }
+        if (toMinute(new Date(data.validStartTime)) < toMinute(new Date())) {
+            showToast('开始时间不能早于当前时间', 'error'); return;
+        }
+        if (toMinute(new Date(data.validEndTime)) <= toMinute(new Date())) {
+            showToast('结束时间必须晚于当前时间', 'error'); return;
+        }
+    }
     request.post('/api/v1/coupon', data).then(() => {
         showToast('保存成功', 'success');
         closeModal();

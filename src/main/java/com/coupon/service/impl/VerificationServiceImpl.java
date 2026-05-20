@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -118,7 +119,7 @@ public class VerificationServiceImpl implements VerificationService {
 
         // 更新用户优惠券状态为待核销（状态流转：已领取->待核销）
         memberCoupon.setStatus(CouponStatusEnum.PENDING_VERIFICATION);
-        memberCoupon.setUseTime(new Date());
+        memberCoupon.setUseTime(LocalDateTime.now());
         memberCouponMapper.updateById(memberCoupon);
 
         // 返回核销信息
@@ -178,7 +179,7 @@ public class VerificationServiceImpl implements VerificationService {
 
         // 更新核销记录的核销时间和核销人（模拟店员）
         record.setVerifier("STAFF"); // 店员
-        record.setVerificationTime(new Date());
+        record.setVerificationTime(LocalDateTime.now());
         verificationMapper.updateById(record);
 
         // 返回核销信息
@@ -233,5 +234,41 @@ public class VerificationServiceImpl implements VerificationService {
 
         // 使用MyBatis Plus分页插件，自动处理分页
         return verificationMapper.selectVerificationRecordsWithJoin(page, query);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public VerificationDTO refreshCode(Long recordId) {
+        MemberDTO memberInfo = MemberUtil.getMemberInfo();
+
+        VerificationRecord record = verificationMapper.selectById(recordId);
+        if (record == null) {
+            throw new ReturnException("核销记录不存在");
+        }
+        if (!record.getMemberId().equals(memberInfo.getId())) {
+            throw new ReturnException("无权操作该核销记录");
+        }
+
+        LambdaQueryWrapper<MemberCoupon> couponWrapper = new LambdaQueryWrapper<>();
+        couponWrapper.eq(MemberCoupon::getMemberId, record.getMemberId())
+                .eq(MemberCoupon::getTemplateId, record.getTemplateId());
+        MemberCoupon memberCoupon = memberCouponMapper.selectOne(couponWrapper);
+
+        if (memberCoupon == null || memberCoupon.getStatus() != CouponStatusEnum.PENDING_VERIFICATION) {
+            throw new ReturnException("仅待核销状态可刷新核销码");
+        }
+
+        String newCode = generateUniqueCode();
+        record.setVerificationCode(newCode);
+        verificationMapper.updateById(record);
+
+        CouponTemplate couponTemplate = couponMapper.selectById(record.getTemplateId());
+        VerificationDTO dto = new VerificationDTO();
+        BeanUtils.copyProperties(record, dto);
+        if (couponTemplate != null) {
+            dto.setCouponName(couponTemplate.getName());
+            dto.setCouponType(couponTemplate.getType().ordinal() + 1);
+        }
+        return dto;
     }
 }

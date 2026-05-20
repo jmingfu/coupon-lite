@@ -9,14 +9,14 @@ import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.DecimalMin;
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * 基于SpringBoot框架的个人练手项目-优惠券模板，前后端参数
  *
  * @author JMF
- * @date 2026-04-08 12:57
- * @date 2026-04-08
+ * @LocalDateTime 2026-04-08 12:57
+ * @LocalDateTime 2026-04-08
  */
 @Data
 @Api(tags = "优惠券模板，前后端参数")
@@ -66,22 +66,22 @@ public class CouponDTO extends PageParam {
      * 有效期开始
      */
     @ApiModelProperty("有效期开始")
-    private Date validStartTime;
+    private LocalDateTime validStartTime;
     /**
      * 有效期结束
      */
     @ApiModelProperty("有效期结束")
-    private Date validEndTime;
+    private LocalDateTime validEndTime;
     /**
      * 创建时间
      */
     @ApiModelProperty("创建时间")
-    private Date createTime;
+    private LocalDateTime createTime;
     /**
      * 更新时间
      */
     @ApiModelProperty("更新时间")
-    private Date updateTime;
+    private LocalDateTime upLocalDateTimeTime;
     /**
      * 是否删除 0否1是
      */
@@ -95,13 +95,13 @@ public class CouponDTO extends PageParam {
      * 领取时间
      */
     @ApiModelProperty("领取时间")
-    private Date receiveTime;
+    private LocalDateTime receiveTime;
 
     /**
      * 使用时间
      */
     @ApiModelProperty("使用时间")
-    private Date useTime;
+    private LocalDateTime useTime;
 
     /**
      * 状态 1未使用 2已使用 3已过期

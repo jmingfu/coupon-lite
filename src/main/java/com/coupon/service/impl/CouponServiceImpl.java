@@ -25,9 +25,12 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Date;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 基于SpringBoot框架的个人练手项目-
@@ -57,13 +60,11 @@ public class CouponServiceImpl implements CouponService {
             couponMapper.insert(coupon);
         } else {
             int rows = couponMapper.updateById(coupon);
-
             if (rows == 0) {
                 throw new ReturnException("优惠券id不存在，更新失败");
             }
-            // 更新redis
-            redisTemplate.opsForValue().set(RedisConstant.ALL_COUPON + coupon.getId(),
-                    objectMapper.writeValueAsString(couponDTO));
+            // 删除redis缓存
+            redisTemplate.delete(RedisConstant.ALL_COUPON + coupon.getId());
         }
         // 更新redis优惠券id列表
         redisTemplate.opsForSet().add(RedisConstant.COUPON_IDS, String.valueOf(coupon.getId()));
@@ -85,9 +86,10 @@ public class CouponServiceImpl implements CouponService {
         /*
          * 先做防穿透处理，由于线下门店，客户到店使用、查看优惠券对于一致性要求高，使用空值缓存会产生临界问题：当优惠券缓存过期前很短时间内，产生
          * 了一个空值缓存，这时就会导致已有的优惠券，但是小程序端提示优惠券不存在；而数据量少的情况下，不需要用布隆过滤器，因为维护麻烦.因此这里我使用
-         * RedisSet直接缓存已存在的优惠券id
+         * RedisSet直接缓存已存在的优惠券id。管理端需能编辑历史数据，未入集合时仍回源数据库。
          */
-        if (Objects.equals(redisTemplate.opsForSet().isMember(RedisConstant.COUPON_IDS, String.valueOf(id)),
+        if (!isAdminUser() && Objects.equals(
+                redisTemplate.opsForSet().isMember(RedisConstant.COUPON_IDS, String.valueOf(id)),
                 Boolean.FALSE)) {
             throw new ReturnException("优惠券不存在");
         }
@@ -96,12 +98,24 @@ public class CouponServiceImpl implements CouponService {
             return objectMapper.readValue(stringCoupon, CouponDTO.class);
         }
         CouponTemplate couponTemplate = couponMapper.selectById(id);
+        if (couponTemplate == null) {
+            throw new ReturnException("优惠券不存在");
+        }
+        redisTemplate.opsForSet().add(RedisConstant.COUPON_IDS, String.valueOf(couponTemplate.getId()));
         CouponDTO couponDTO = new CouponDTO();
         BeanUtils.copyProperties(couponTemplate, couponDTO);
-        // 存入redis
         redisTemplate.opsForValue().set(RedisConstant.ALL_COUPON + couponTemplate.getId(),
-                objectMapper.writeValueAsString(couponDTO));     
+                objectMapper.writeValueAsString(couponDTO), 10, TimeUnit.MINUTES);
         return couponDTO;
+    }
+
+    private boolean isAdminUser() {
+        try {
+            MemberDTO memberInfo = MemberUtil.getMemberInfo();
+            return memberInfo != null && memberInfo.getAdminId() != null;
+        } catch (Exception ignored) {
+            return false;
+        }
     }
 
     @Override
@@ -202,6 +216,11 @@ public class CouponServiceImpl implements CouponService {
                 if (Objects.isNull(couponDTO.getDiscountRate())) {
                     throw new ReturnException("折扣券请输入折扣率");
                 }
+                BigDecimal rate = couponDTO.getDiscountRate();
+                if (rate.compareTo(BigDecimal.ZERO) < 0 || rate.compareTo(BigDecimal.ONE) > 0
+                        || rate.scale() > 1) {
+                    throw new ReturnException("折扣率须为0-1的一位小数");
+                }
                 couponDTO.setFullAmount(null);
                 couponDTO.setDiscountAmount(null);
                 break;
@@ -215,15 +234,24 @@ public class CouponServiceImpl implements CouponService {
             default:
                 throw new ReturnException("不支持的优惠券类型");
         }
-        if (couponDTO.getValidStartTime() != null && couponDTO.getValidStartTime().before(new Date())) {
-            throw new ReturnException("开始时间不能早于当前时间");
+        LocalDateTime now = truncateToMinute(LocalDateTime.now());
+        LocalDateTime start = truncateToMinute(couponDTO.getValidStartTime());
+        LocalDateTime end = truncateToMinute(couponDTO.getValidEndTime());
+        boolean valid;
+        if (couponDTO.getId() != null) {
+            valid = (start == null && end == null) || (start != null && end != null && start.isBefore(end));
+        } else {
+            valid = start != null && end != null && !start.isBefore(now) && end.isAfter(now) && start.isBefore(end);
         }
-        if (couponDTO.getValidEndTime() != null && couponDTO.getValidEndTime().before(new Date())) {
-            throw new ReturnException("结束时间不能早于当前时间");
+        if (!valid) {
+            throw new ReturnException("优惠券时间范围不合法，请重新设置");
         }
-        if (couponDTO.getValidStartTime() != null && couponDTO.getValidEndTime() != null
-                && couponDTO.getValidStartTime().after(couponDTO.getValidEndTime())) {
-            throw new ReturnException("开始时间不能晚于结束时间");
+    }
+
+    private LocalDateTime truncateToMinute(LocalDateTime date) {
+        if (date == null) {
+            return null;
         }
+        return date.withSecond(0).withNano(0);
     }
 }

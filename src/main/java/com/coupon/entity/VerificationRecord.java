@@ -10,6 +10,7 @@ import lombok.Data;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -63,12 +64,12 @@ public class VerificationRecord {
      * 核销时间
      */
     @ApiModelProperty("核销时间")
-    private Date verificationTime;
+    private LocalDateTime verificationTime;
 
     /**
      * 创建时间
      */
     @ApiModelProperty("创建时间")
     @TableField(updateStrategy = com.baomidou.mybatisplus.annotation.FieldStrategy.NEVER)
-    private Date createTime;
+    private LocalDateTime createTime;
 }

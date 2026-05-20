@@ -1,6 +1,7 @@
 package com.coupon.dto;
 
 import com.coupon.common.PageParam;
+import com.coupon.common.enums.MemberStatusEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.springframework.validation.annotation.Validated;
@@ -95,4 +96,11 @@ public class MemberDTO extends PageParam implements Serializable {
 
     @ApiModelProperty("登录时间戳")
     private String timeStamp;
+
+    /**
+     * 会员状态 1正常 2禁用
+     */
+    @ApiModelProperty("会员状态")
+    private MemberStatusEnum status;
+
 }

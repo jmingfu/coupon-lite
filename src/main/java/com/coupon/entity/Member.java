@@ -11,6 +11,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -71,13 +72,13 @@ public class Member implements Serializable {
      */
     @TableField(fill = FieldFill.INSERT)
     @ApiModelProperty("注册时间")
-    private Date createTime;
+    private LocalDateTime createTime;
     /**
      * 更新时间
      */
     @TableField(fill = FieldFill.UPDATE)
     @ApiModelProperty("更新时间")
-    private Date updateTime;
+    private LocalDateTime updateTime;
     /**
      * 是否删除 0否1是，逻辑删除字段
      */

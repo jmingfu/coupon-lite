@@ -5,7 +5,7 @@ spring:
     username: root
     password: jmfjmf55
     driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
-    url: jdbc:log4jdbc:mysql://192.168.137.250:3306/wx-miniapp-database?serverTimezone=UTC&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:log4jdbc:mysql://192.168.137.250:3306/wx-miniapp-database?serverTimezone=Asia/Shanghai&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true
   web:
     resources:
       static-locations: classpath:/static/  # 静态资源目录（默认就是这个，可省略）

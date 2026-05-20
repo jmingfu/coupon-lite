@@ -11,6 +11,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -75,24 +76,24 @@ public class CouponTemplate implements Serializable {
      */
     @NotNull(message = "[有效期开始]不能为空")
     @ApiModelProperty("有效期开始")
-    private Date validStartTime;
+    private LocalDateTime validStartTime;
     /**
      * 有效期结束
      */
     @NotNull(message = "[有效期结束]不能为空")
     @ApiModelProperty("有效期结束")
-    private Date validEndTime;
+    private LocalDateTime validEndTime;
     /**
      * 创建时间
      */
     @ApiModelProperty("创建时间")
     @TableField(updateStrategy = FieldStrategy.NEVER)
-    private Date createTime;
+    private LocalDateTime createTime;
     /**
      * 更新时间
      */
     @ApiModelProperty("更新时间")
-    private Date updateTime;
+    private LocalDateTime updateTime;
     /**
      * 是否删除 0否1是
      */

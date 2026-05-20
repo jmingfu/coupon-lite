@@ -4,6 +4,7 @@ import com.coupon.common.PageParam;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -26,11 +27,11 @@ public class VerificationRecordQueryDTO extends PageParam {
      * 开始时间
      */
     @ApiModelProperty("开始时间")
-    private Date startTime;
+    private LocalDateTime startTime;
 
     /**
      * 结束时间
      */
     @ApiModelProperty("结束时间")
-    private Date endTime;
+    private LocalDateTime endTime;
 }

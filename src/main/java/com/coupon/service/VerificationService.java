@@ -45,4 +45,6 @@ public interface VerificationService {
      * @return 核销记录分页列表
      */
     IPage<VerificationRecordAdminDTO> pageVerificationRecords(VerificationRecordQueryDTO query);
+
+    VerificationDTO refreshCode(Long recordId);
 }

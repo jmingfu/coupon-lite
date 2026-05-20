@@ -9,6 +9,7 @@ import org.hibernate.validator.constraints.Length;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -56,37 +57,37 @@ public class MemberCoupon implements Serializable {
      */
     @ApiModelProperty("领取时间")
     @TableField(updateStrategy = FieldStrategy.NEVER)
-    private Date receiveTime;
+    private LocalDateTime receiveTime;
     /**
      * 使用时间
      */
     @ApiModelProperty("使用时间")
-    private Date useTime;
+    private LocalDateTime useTime;
 
 
     /**
      * 券有效期开始时间
      */
     @ApiModelProperty("券有效期开始时间")
-    private Date validStartTime;
+    private LocalDateTime validStartTime;
 
     /**
      * 券有效期结束时间
      */
     @ApiModelProperty("券有效期结束时间")
-    private Date validEndTime;
+    private LocalDateTime validEndTime;
 
     /**
      * 创建时间
      */
     @ApiModelProperty("创建时间")
     @TableField(updateStrategy = FieldStrategy.NEVER)
-    private Date createTime;
+    private LocalDateTime createTime;
     /**
      * 更新时间
      */
     @ApiModelProperty("更新时间")
-    private Date updateTime;
+    private LocalDateTime updateTime;
     /**
      * 是否删除 0否1是
      */

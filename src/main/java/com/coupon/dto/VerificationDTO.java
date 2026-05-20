@@ -5,6 +5,7 @@ import lombok.Data;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.constraints.Size;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -53,13 +54,13 @@ public class VerificationDTO {
      * 核销时间
      */
     @ApiModelProperty("核销时间")
-    private Date verificationTime;
+    private LocalDateTime verificationTime;
 
     /**
      * 创建时间
      */
     @ApiModelProperty("创建时间")
-    private Date createTime;
+    private LocalDateTime createTime;
 
     /**
      * 优惠券名称
