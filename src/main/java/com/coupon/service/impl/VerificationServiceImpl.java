@@ -218,8 +218,18 @@ public class VerificationServiceImpl implements VerificationService {
     }
 
     @Override
-    public IPage<VerificationRecordAdminDTO> pageVerificationRecords(Page<VerificationRecordAdminDTO> page,
-                                                                     VerificationRecordQueryDTO query) {
+    public IPage<VerificationRecordAdminDTO> pageVerificationRecords(VerificationRecordQueryDTO query) {
+        // 设置默认分页参数
+        if (query.getPageNum() == null || query.getPageNum() <= 0) {
+            query.setPageNum(1);
+        }
+        if (query.getPageSize() == null || query.getPageSize() <= 0) {
+            query.setPageSize(10);
+        }
+
+        // 创建分页对象
+        Page<VerificationRecordAdminDTO> page = new Page<>(query.getPageNum(), query.getPageSize());
+
         // 使用MyBatis Plus分页插件，自动处理分页
         return verificationMapper.selectVerificationRecordsWithJoin(page, query);
     }

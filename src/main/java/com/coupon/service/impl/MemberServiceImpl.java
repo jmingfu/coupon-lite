@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.coupon.common.RedisConstant;
 import com.coupon.common.config.WechatLoginProperties;
 import com.coupon.common.config.WechatMiniConfig;
+import com.coupon.common.enums.MemberStatusEnum;
 import com.coupon.common.exception.ReturnException;
 import com.coupon.controller.MemberController;
 import com.coupon.dto.MemberDTO;
@@ -79,12 +80,17 @@ public class MemberServiceImpl implements MemberService {
         Member member = memberMapper.selectOne(wrapper);
         String token = UUID.randomUUID().toString().replace("-", "");
         if (member != null) {
+            // 检查会员状态是否禁用
+            if (member.getStatus() != null && member.getStatus() == MemberStatusEnum.DISABLED) {
+                throw new ReturnException("账号已被禁用");
+            }
             BeanUtils.copyProperties(member, memberDTO);
         } else {
             Member newMember = new Member();
             newMember.setOpenid(openId);
             newMember.setNickname(memberDTO.getNickname());
             newMember.setPhone(memberDTO.getPhone());
+            newMember.setStatus(MemberStatusEnum.NORMAL); // 默认正常状态
             try {
                 memberMapper.insert(newMember);
                 BeanUtils.copyProperties(newMember, memberDTO);
@@ -152,5 +158,21 @@ public class MemberServiceImpl implements MemberService {
             BeanUtils.copyProperties(member, memberDTO);
             return memberDTO;
         });
+    }
+
+    /**
+     * 禁用/启用会员
+     * @param memberId 会员ID
+     * @param status 目标状态
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateMemberStatus(Long memberId, MemberStatusEnum status) {
+        Member member = memberMapper.selectById(memberId);
+        if (member == null) {
+            throw new ReturnException("会员不存在");
+        }
+        member.setStatus(status);
+        memberMapper.updateById(member);
     }
 }

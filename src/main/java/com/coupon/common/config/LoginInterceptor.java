@@ -30,12 +30,12 @@ public class LoginInterceptor implements HandlerInterceptor {
         }
         response.setContentType("application/json;charset=utf-8");
         if (StringUtils.isEmpty(token)) {
-            response.getWriter().write(objectMapper.writeValueAsString(Result.fail(CodeEnum.Forbidden, "请先登录")));
+            response.getWriter().write(objectMapper.writeValueAsString(Result.fail(CodeEnum.Unauthorized, "请先登录")));
             return false;
         }
         String json=redisTemplate.opsForValue().get(RedisConstant.LOGIN_TOKEN +token);
         if(StringUtils.isEmpty(json)){
-            response.getWriter().write(objectMapper.writeValueAsString(Result.fail(CodeEnum.Forbidden, "登录已过期，请重新登录")));
+            response.getWriter().write(objectMapper.writeValueAsString(Result.fail(CodeEnum.Unauthorized, "登录已过期，请重新登录")));
             return false;
         }
         MemberDTO dto = objectMapper.readValue(json, MemberDTO.class);
@@ -45,7 +45,7 @@ public class LoginInterceptor implements HandlerInterceptor {
             return true;
         }
         if(!token.equals(loginToken)){
-            response.getWriter().write(objectMapper.writeValueAsString(Result.fail(CodeEnum.Forbidden, "登录凭证已失效")));
+            response.getWriter().write(objectMapper.writeValueAsString(Result.fail(CodeEnum.Unauthorized, "登录凭证已失效")));
             return false;
         }
         return true;

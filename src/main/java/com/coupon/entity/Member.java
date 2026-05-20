@@ -1,6 +1,7 @@
 package com.coupon.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.coupon.common.enums.MemberStatusEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
@@ -60,6 +61,11 @@ public class Member implements Serializable {
      */
     @ApiModelProperty("积分（可选，先不做）")
     private Integer points;
+    /**
+     * 会员状态 1正常 2禁用
+     */
+    @ApiModelProperty("会员状态")
+    private MemberStatusEnum status;
     /**
      * 注册时间
      */

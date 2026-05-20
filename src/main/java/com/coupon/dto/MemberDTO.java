@@ -75,6 +75,12 @@ public class MemberDTO extends PageParam implements Serializable {
     @ApiModelProperty("会员登录token")
     private String token;
 
+    /**
+     * 管理员ID（管理员登录时使用，用于区分管理员和会员）
+     */
+    @ApiModelProperty("管理员ID")
+    private Long adminId;
+
     @ApiModelProperty("会员注册开始时间")
     private LocalDateTime beginTime;
 

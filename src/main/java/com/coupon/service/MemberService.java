@@ -1,6 +1,7 @@
 package com.coupon.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.coupon.common.enums.MemberStatusEnum;
 import com.coupon.dto.MemberDTO;
 
 /**
@@ -17,4 +18,11 @@ public interface MemberService {
     MemberDTO getById(Long id);
 
     IPage<MemberDTO> selectPage(MemberDTO memberDTO);
+
+    /**
+     * 更新会员状态（禁用/启用）
+     * @param memberId 会员ID
+     * @param status 目标状态
+     */
+    void updateMemberStatus(Long memberId, MemberStatusEnum status);
 }

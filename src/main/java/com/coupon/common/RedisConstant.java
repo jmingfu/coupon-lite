@@ -20,7 +20,7 @@ public class RedisConstant {
     // 优惠券一小时内访问次数
     public static final String COUPON_COUNTS = "coupon:counts:";
 
-    //微信小程序openId
+    //微信小程序openId/会员登录标识
     public static final String LOGIN_OPENID = "LOGIN:token:latest:";
 
     //登录token

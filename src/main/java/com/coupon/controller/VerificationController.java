@@ -1,7 +1,6 @@
 package com.coupon.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.coupon.common.Result;
 import com.coupon.dto.VerificationDTO;
 import com.coupon.dto.VerificationRecordAdminDTO;
@@ -79,18 +78,6 @@ public class VerificationController {
     @ApiOperation(value = "后台查询核销记录", notes = "后台管理使用，支持分页和条件查询，参数以JSON对象形式传递")
     public Result<IPage<VerificationRecordAdminDTO>> pageVerificationRecords(
             @ApiParam("查询条件") @RequestBody @Valid VerificationRecordQueryDTO query) {
-
-        // 设置默认分页参数
-        if (query.getPageNum() == null || query.getPageNum() <= 0) {
-            query.setPageNum(1);
-        }
-        if (query.getPageSize() == null || query.getPageSize() <= 0) {
-            query.setPageSize(10);
-        }
-
-        Page<VerificationRecordAdminDTO> page = new Page<>(query.getPageNum(), query.getPageSize());
-        return Result.success(verificationService.pageVerificationRecords(page, query));
+        return Result.success(verificationService.pageVerificationRecords(query));
     }
-
-
 }
