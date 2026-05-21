@@ -36,15 +36,13 @@
             <button class="btn" onclick="resetSearch()">重置</button>
             <button class="btn btn-success" onclick="openAddModal()">新增优惠券</button>
         </div>
-        <table>
+        <table class="desktop-table">
             <thead>
                 <tr>
                     <th>ID</th>
                     <th>名称</th>
                     <th>类型</th>
-                    <th>满减门槛</th>
-                    <th>减免金额</th>
-                    <th>折扣率</th>
+                    <th>优惠</th>
                     <th>总量</th>
                     <th>剩余</th>
                     <th>有效期</th>
@@ -53,6 +51,7 @@
             </thead>
             <tbody id="tableBody"></tbody>
         </table>
+        <div id="cardList" class="mobile-card-list"></div>
         <div class="pagination" id="pagination"></div>
     </div>
 </div>
@@ -79,17 +78,26 @@ function loadData(page) {
 
 function renderTable(records) {
     const tbody = document.getElementById('tableBody');
+    const cardList = document.getElementById('cardList');
     if (!records || records.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#999">暂无数据</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#999">暂无数据</td></tr>';
+        cardList.innerHTML = '<div style="text-align:center;color:#999;padding:24px">暂无数据</div>';
         return;
     }
-    tbody.innerHTML = records.map(r => `<tr>
+    tbody.innerHTML = records.map(r => {
+        let desc;
+        if (r.type === 'FULL_REDUCTION') {
+            desc = '满' + (r.fullAmount != null ? r.fullAmount : '-') + '减' + (r.discountAmount != null ? r.discountAmount : '-');
+        } else if (r.type === 'DISCOUNT') {
+            desc = r.discountRate != null ? (r.discountRate * 10) + '折' : '-';
+        } else {
+            desc = r.discountAmount != null ? '¥' + r.discountAmount : '-';
+        }
+        return `<tr>
         <td>${r.id}</td>
         <td>${r.name || '-'}</td>
         <td><span class="tag tag-blue">${CouponType[r.type] || r.type}</span></td>
-        <td>${r.fullAmount != null ? '¥' + r.fullAmount : '-'}</td>
-        <td>${r.discountAmount != null ? '¥' + r.discountAmount : '-'}</td>
-        <td>${r.discountRate != null ? r.discountRate : '-'}</td>
+        <td>${desc}</td>
         <td>${r.totalCount != null ? r.totalCount : '-'}</td>
         <td>${r.remainCount != null ? r.remainCount : '-'}</td>
         <td>${formatShortDate(r.validStartTime)} ~ ${formatShortDate(r.validEndTime)}</td>
@@ -97,7 +105,30 @@ function renderTable(records) {
             <button class="btn btn-sm" onclick="openEditModal(${r.id})">编辑</button>
             <button class="btn btn-sm btn-danger" onclick="deleteCoupon(${r.id})">删除</button>
         </td>
-    </tr>`).join('');
+    </tr>`;
+    }).join('');
+    cardList.innerHTML = records.map(r => {
+        let desc;
+        if (r.type === 'FULL_REDUCTION') {
+            desc = '满' + (r.fullAmount != null ? r.fullAmount : '-') + '减' + (r.discountAmount != null ? r.discountAmount : '-');
+        } else if (r.type === 'DISCOUNT') {
+            desc = r.discountRate != null ? (r.discountRate * 10) + '折' : '-';
+        } else {
+            desc = r.discountAmount != null ? '¥' + r.discountAmount : '-';
+        }
+        return `<div class="mobile-card">
+        <div class="mobile-card-header"><strong>${r.name || '-'}</strong><span class="tag tag-blue">${CouponType[r.type] || r.type}</span></div>
+        <div class="mobile-card-body">
+            <div><span>优惠</span><span>${desc}</span></div>
+            <div><span>总量/剩余</span><span>${r.totalCount != null ? r.totalCount : '-'} / ${r.remainCount != null ? r.remainCount : '-'}</span></div>
+            <div><span>有效期</span><span>${formatShortDate(r.validStartTime)} ~ ${formatShortDate(r.validEndTime)}</span></div>
+        </div>
+        <div class="mobile-card-actions">
+            <button class="btn btn-sm" onclick="openEditModal(${r.id})">编辑</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteCoupon(${r.id})">删除</button>
+        </div>
+    </div>`;
+    }).join('');
 }
 
 function renderPagination(page) {

@@ -1,11 +1,11 @@
 package com.coupon.dto;
 
 import com.coupon.common.PageParam;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 /**
  * 核销记录查询参数DTO
@@ -27,11 +27,13 @@ public class VerificationRecordQueryDTO extends PageParam {
      * 开始时间
      */
     @ApiModelProperty("开始时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime startTime;
 
     /**
      * 结束时间
      */
     @ApiModelProperty("结束时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime endTime;
 }

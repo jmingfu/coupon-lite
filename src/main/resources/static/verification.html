@@ -34,7 +34,7 @@
             <button class="btn btn-primary" onclick="loadData(1)">查询</button>
             <button class="btn" onclick="resetSearch()">重置</button>
         </div>
-        <table>
+        <table class="desktop-table">
             <thead>
                 <tr>
                     <th>ID</th>
@@ -48,6 +48,7 @@
             </thead>
             <tbody id="tableBody"></tbody>
         </table>
+        <div id="cardList" class="mobile-card-list"></div>
         <div class="pagination" id="pagination"></div>
     </div>
 </div>
@@ -76,8 +77,10 @@ function loadData(page) {
 
 function renderTable(records) {
     const tbody = document.getElementById('tableBody');
+    const cardList = document.getElementById('cardList');
     if (!records || records.length === 0) {
         tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999">暂无数据</td></tr>';
+        cardList.innerHTML = '<div style="text-align:center;color:#999;padding:24px">暂无数据</div>';
         return;
     }
     tbody.innerHTML = records.map(r => `<tr>
@@ -89,6 +92,15 @@ function renderTable(records) {
         <td>${formatDate(r.verificationTime)}</td>
         <td>${formatDate(r.createTime)}</td>
     </tr>`).join('');
+    cardList.innerHTML = records.map(r => `<div class="mobile-card">
+        <div class="mobile-card-header"><strong>${r.couponName || '-'}</strong><span class="tag tag-blue">${r.verificationCode || '-'}</span></div>
+        <div class="mobile-card-body">
+            <div><span>用户手机号</span><span>${r.memberPhone || '-'}</span></div>
+            <div><span>核销人</span><span>${r.verifier || '-'}</span></div>
+            <div><span>核销时间</span><span>${formatDate(r.verificationTime)}</span></div>
+            <div><span>创建时间</span><span>${formatDate(r.createTime)}</span></div>
+        </div>
+    </div>`).join('');
 }
 
 function renderPagination(page) {

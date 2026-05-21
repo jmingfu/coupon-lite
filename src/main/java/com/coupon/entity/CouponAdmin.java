@@ -16,7 +16,7 @@ import java.util.Date;
  * @date 2026-05-19
  */
 @Data
-@TableName("counpon_admin")
+@TableName("coupon_admin")
 public class CouponAdmin {
 
     /**

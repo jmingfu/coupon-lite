@@ -68,4 +68,16 @@ public class VerificationRecordAdminDTO {
      */
     @ApiModelProperty("创建时间")
     private LocalDateTime createTime;
+
+    /**
+     * 查询开始时间
+     */
+    @ApiModelProperty("查询开始时间")
+    private LocalDateTime startTime;
+
+    /**
+     * 查询结束时间
+     */
+    @ApiModelProperty("查询结束时间")
+    private LocalDateTime endTime;
 }

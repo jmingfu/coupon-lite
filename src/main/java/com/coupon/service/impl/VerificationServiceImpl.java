@@ -24,7 +24,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -79,10 +78,8 @@ public class VerificationServiceImpl implements VerificationService {
 
         // 检查优惠券状态（使用枚举）
         CouponStatusEnum status = memberCoupon.getStatus();
-        if (status != CouponStatusEnum.UNUSED) {
-            if (status == CouponStatusEnum.PENDING_VERIFICATION) {
-                throw new ReturnException("优惠券已处于待核销状态");
-            } else if (status == CouponStatusEnum.VERIFIED) {
+        if (status != CouponStatusEnum.UNUSED && status != CouponStatusEnum.PENDING_VERIFICATION) {
+            if (status == CouponStatusEnum.VERIFIED) {
                 throw new ReturnException("优惠券已核销");
             } else if (status == CouponStatusEnum.EXPIRED) {
                 throw new ReturnException("优惠券已过期");
@@ -238,10 +235,11 @@ public class VerificationServiceImpl implements VerificationService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public VerificationDTO refreshCode(Long recordId) {
+    public VerificationDTO refreshCode(String verificationCode) {
         MemberDTO memberInfo = MemberUtil.getMemberInfo();
-
-        VerificationRecord record = verificationMapper.selectById(recordId);
+        LambdaQueryWrapper<VerificationRecord> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(VerificationRecord::getVerificationCode,verificationCode);
+        VerificationRecord record = verificationMapper.selectOne(wrapper);
         if (record == null) {
             throw new ReturnException("核销记录不存在");
         }

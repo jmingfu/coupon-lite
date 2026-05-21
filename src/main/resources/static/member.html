@@ -38,7 +38,7 @@
             <button class="btn btn-primary" onclick="loadData(1)">查询</button>
             <button class="btn" onclick="resetSearch()">重置</button>
         </div>
-        <table>
+        <table class="desktop-table">
             <thead>
                 <tr>
                     <th>ID</th>
@@ -51,6 +51,7 @@
             </thead>
             <tbody id="tableBody"></tbody>
         </table>
+        <div id="cardList" class="mobile-card-list"></div>
         <div class="pagination" id="pagination"></div>
     </div>
 </div>
@@ -80,8 +81,10 @@ function loadData(page) {
 
 function renderTable(records) {
     const tbody = document.getElementById('tableBody');
+    const cardList = document.getElementById('cardList');
     if (!records || records.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#999">暂无数据</td></tr>';
+        cardList.innerHTML = '<div style="text-align:center;color:#999;padding:24px">暂无数据</div>';
         return;
     }
     tbody.innerHTML = records.map(r => {
@@ -102,6 +105,25 @@ function renderTable(records) {
                 ${actionBtn}
             </td>
         </tr>`;
+    }).join('');
+    cardList.innerHTML = records.map(r => {
+        const statusTag = r.status === 'DISABLED'
+            ? '<span class="tag tag-red">禁用</span>'
+            : '<span class="tag tag-green">正常</span>';
+        const actionBtn = r.status === 'DISABLED'
+            ? `<button class="btn btn-sm btn-success" onclick="updateStatus(${r.id}, 'NORMAL')">启用</button>`
+            : `<button class="btn btn-sm btn-danger" onclick="updateStatus(${r.id}, 'DISABLED')">禁用</button>`;
+        return `<div class="mobile-card">
+            <div class="mobile-card-header"><strong>${r.nickname || '-'}</strong>${statusTag}</div>
+            <div class="mobile-card-body">
+                <div><span>手机号</span><span>${r.phone || '-'}</span></div>
+                <div><span>注册时间</span><span>${formatDate(r.createTime)}</span></div>
+            </div>
+            <div class="mobile-card-actions">
+                <button class="btn btn-sm" onclick="showDetail(${r.id})">详情</button>
+                ${actionBtn}
+            </div>
+        </div>`;
     }).join('');
 }
 

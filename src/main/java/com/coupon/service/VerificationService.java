@@ -46,5 +46,5 @@ public interface VerificationService {
      */
     IPage<VerificationRecordAdminDTO> pageVerificationRecords(VerificationRecordQueryDTO query);
 
-    VerificationDTO refreshCode(Long recordId);
+    VerificationDTO refreshCode(String verificationCode);
 }

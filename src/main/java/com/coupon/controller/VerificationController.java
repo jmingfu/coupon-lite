@@ -84,7 +84,7 @@ public class VerificationController {
     @PostMapping("/refresh-code")
     @ApiOperation(value = "刷新核销码", notes = "根据核销记录ID刷新核销码，仅待核销状态可刷新")
     public Result<String> refreshCode(
-            @RequestParam @NotNull(message = "核销记录ID不能为空") Long recordId) {
-        return Result.success(verificationService.refreshCode(recordId).getVerificationCode());
+            @RequestParam @NotNull(message = "核销记录ID不能为空") String verificationCode) {
+        return Result.success(verificationService.refreshCode(verificationCode).getVerificationCode());
     }
 }
