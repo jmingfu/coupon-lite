@@ -41,13 +41,13 @@ public class LimitAspect {
         HttpServletRequest request = getRequest();
         String method = request.getMethod();
         String uri = request.getRequestURI();
-        String key = RedisConstant.LIMIT_URL + method + ":" + uri;
+        String urlKey = RedisConstant.LIMIT_URL + method + ":" + uri;
         String token = getToken();
         if (token != null) {
-            key = RedisConstant.LIMIT_openid + token;
-            checkLimit(OPEN_LIMIT, key);
+            String tokenKey = RedisConstant.LIMIT_openid + token;
+            checkLimit(OPEN_LIMIT, tokenKey);
         }
-        checkLimit(urlLimitCount, key);
+        checkLimit(urlLimitCount, urlKey);
     }
 
     private void checkLimit(int limitCount, String key) {
