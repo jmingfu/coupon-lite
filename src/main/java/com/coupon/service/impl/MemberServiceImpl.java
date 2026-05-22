@@ -106,28 +106,28 @@ public class MemberServiceImpl implements MemberService {
         //按照id存token，按照token存用户信息
         stringRedisTemplate.opsForValue().set(RedisConstant.LOGIN_OPENID + memberDTO.getOpenid(), token, 2, TimeUnit.HOURS);
         stringRedisTemplate.opsForValue().set(RedisConstant.LOGIN_TOKEN + token, objectMapper.writeValueAsString(memberDTO), 2, TimeUnit.HOURS);
+        stringRedisTemplate.opsForValue().set(RedisConstant.LOGIN_NONCE + memberDTO.getNonce(), memberDTO.getNonce(),
+                wechatLoginProperties.getSignExpireSeconds(), TimeUnit.SECONDS);
         return memberDTO;
     }
 
     public Boolean checkSign(String sign, String code, String nonce, String timestamp) {
-//        long now = System.currentTimeMillis() / 1000;
-//        long ts;
-//        try {
-//            ts=Long.parseLong(timestamp);
-//        } catch (NumberFormatException e) {
-//            throw new ReturnException("时间戳格式错误");
-//        }
-//        //从配置读取过期时间
-//        if(Math.abs(now-ts)>wechatLoginProperties.getSignExpireSeconds()){
-//            throw new ReturnException("请求已过期");
-//        }
-
+        long now = System.currentTimeMillis() / 1000;
+        long ts;
+        try {
+            ts = Long.parseLong(timestamp);
+        } catch (NumberFormatException e) {
+            throw new ReturnException("时间戳格式错误");
+        }
+        //从配置读取过期时间
+        if (Math.abs(now - ts) >= wechatLoginProperties.getSignExpireSeconds()) {
+            throw new ReturnException("请求已过期");
+        }
         String plainText = "code=" + code + "&timestamp=" + timestamp + "&nonce=" + nonce + "&secret=" + wechatLoginProperties.getSignSecret();
         String md5 = SecureUtil.md5(plainText);
         System.out.println(md5);
         //防重放
-        String nonceKey = "LOGIN:nonce" + nonce;
-        Boolean absent = stringRedisTemplate.opsForValue().setIfAbsent(nonceKey, "1", wechatLoginProperties.getNonceExpireSeconds(), TimeUnit.SECONDS);
+        Boolean absent = stringRedisTemplate.opsForValue().setIfAbsent(RedisConstant.LOGIN_NONCE + nonce, "1", wechatLoginProperties.getNonceExpireSeconds(), TimeUnit.SECONDS);
         if (Boolean.FALSE.equals(absent)) {
             throw new ReturnException("请求过于频繁，请稍后重试");
         }
@@ -162,8 +162,9 @@ public class MemberServiceImpl implements MemberService {
 
     /**
      * 禁用/启用会员
+     *
      * @param memberId 会员ID
-     * @param status 目标状态
+     * @param status   目标状态
      */
     @Override
     @Transactional(rollbackFor = Exception.class)

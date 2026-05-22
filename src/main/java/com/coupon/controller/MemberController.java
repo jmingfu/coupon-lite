@@ -53,7 +53,7 @@ public class MemberController {
     }
 
     @GetMapping("/my-coupon")
-    @ApiLimit
+    @ApiLimit()
     @ApiOperation(value = "查看我的优惠券")
     public Result<List<CouponDTO>> myCoupon() {
         return Result.success(couponService.getMyCoupons());

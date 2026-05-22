@@ -38,38 +38,24 @@ public class LimitAspect {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         ApiLimit apiLimit = signature.getMethod().getAnnotation(ApiLimit.class);
         int urlLimitCount = apiLimit.urlLimit();
-
         HttpServletRequest request = getRequest();
         String method = request.getMethod();
         String uri = request.getRequestURI();
-
-        checkUrlLimit(method, uri, urlLimitCount);
-
+        String key = RedisConstant.LIMIT_URL + method + ":" + uri;
         String token = getToken();
         if (token != null) {
-            checkOpenLimit(token);
+            key = RedisConstant.LIMIT_openid + token;
+            checkLimit(OPEN_LIMIT, key);
         }
+        checkLimit(urlLimitCount, key);
     }
 
-    private void checkUrlLimit(String method, String uri, int urlLimitCount) {
-        String key = "limit:url:" + method + ":" + uri;
-        Long count = redisTemplate.opsForValue().increment(key, 1);
-        if (count != null && count == 1) {
-            redisTemplate.expire(key, LIMIT_WINDOW_SECONDS, TimeUnit.SECONDS);
-        }
-        if (count != null && count > urlLimitCount) {
-            throw new ReturnException("接口访问过于频繁，请稍后重试");
-        }
-    }
-
-    private void checkOpenLimit(String token) {
-        String key = "limit:openId:" + token;
-        Long count = redisTemplate.opsForValue().increment(key, 1);
-        if (count != null && count == 1) {
-            redisTemplate.expire(key, LIMIT_WINDOW_SECONDS, TimeUnit.SECONDS);
-        }
-        if (count != null && count > OPEN_LIMIT) {
-            throw new ReturnException("请求过于频繁");
+    private void checkLimit(int limitCount, String key) {
+        Long count;
+        redisTemplate.opsForValue().setIfAbsent(key, "0", LIMIT_WINDOW_SECONDS, TimeUnit.SECONDS);
+        count = redisTemplate.opsForValue().increment(key, 1);
+        if (count != null && count > limitCount) {
+            throw new ReturnException("接口访问过于频繁，请稍后重试" + key);
         }
     }
 
