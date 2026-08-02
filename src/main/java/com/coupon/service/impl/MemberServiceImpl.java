@@ -106,8 +106,6 @@ public class MemberServiceImpl implements MemberService {
         //按照id存token，按照token存用户信息
         stringRedisTemplate.opsForValue().set(RedisConstant.LOGIN_OPENID + memberDTO.getOpenid(), token, 2, TimeUnit.HOURS);
         stringRedisTemplate.opsForValue().set(RedisConstant.LOGIN_TOKEN + token, objectMapper.writeValueAsString(memberDTO), 2, TimeUnit.HOURS);
-        stringRedisTemplate.opsForValue().set(RedisConstant.LOGIN_NONCE + memberDTO.getNonce(), memberDTO.getNonce(),
-                wechatLoginProperties.getSignExpireSeconds(), TimeUnit.SECONDS);
         return memberDTO;
     }
 

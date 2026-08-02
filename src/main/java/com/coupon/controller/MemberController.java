@@ -34,7 +34,7 @@ public class MemberController {
     @PostMapping("/login-or-register")
     @ApiLimit
     @ApiOperation(value = "注册并登录")
-    public Result<MemberDTO> wechatLogin(@Validated @RequestBody MemberDTO memberDTO) throws Exception {
+    public Result<MemberDTO> wxLogin(@RequestBody MemberDTO memberDTO) throws Exception {
         return Result.success(memberService.wxLogin(memberDTO));
     }
 

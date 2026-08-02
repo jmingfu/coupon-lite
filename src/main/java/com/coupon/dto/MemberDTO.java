@@ -13,73 +13,39 @@ import java.util.Date;
 
 /**
  * 会员登录前端实体
- *
- * @TableName member
  */
 @Data
 @Validated
 public class MemberDTO extends PageParam implements Serializable {
 
-    /**
-     * 主键ID
-     */
     @ApiModelProperty("主键ID")
     private Long id;
-    /**
-     * 微信openid（模拟授权）
-     */
+
     @ApiModelProperty("微信openid（模拟授权）")
     private String openid;
 
-    /**
-     * 微信openid生成的code
-     */
+    @ApiModelProperty("前端生成，用于换取openid")
     private String code;
 
-    /**
-     * 昵称
-     */
     @ApiModelProperty("昵称")
     private String nickname;
-    /**
-     * 手机号
-     */
+
     @ApiModelProperty("手机号")
     private String phone;
-    /**
-     * 储值余额（可选，先不做）
-     */
-    @ApiModelProperty("储值余额（可选，先不做）")
-    private BigDecimal balance;
-    /**
-     * 积分（可选，先不做）
-     */
-    @ApiModelProperty("积分（可选，先不做）")
-    private Integer points;
-    /**
-     * 注册时间
-     */
+
     @ApiModelProperty("注册时间")
     private Date createTime;
-    /**
-     * 更新时间
-     */
+
     @ApiModelProperty("更新时间")
     private Date updateTime;
-    /**
-     * 是否删除 0否1是
-     */
+
     @ApiModelProperty("是否删除 0否1是")
     private Integer isDeleted;
-
 
     @ApiModelProperty("会员登录token")
     private String token;
 
-    /**
-     * 管理员ID（管理员登录时使用，用于区分管理员和会员）
-     */
-    @ApiModelProperty("管理员ID")
+    @ApiModelProperty("管理员ID，如果是管理员就设置")
     private Long adminId;
 
     @ApiModelProperty("会员注册开始时间")
