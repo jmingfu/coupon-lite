@@ -19,6 +19,7 @@ import com.coupon.service.MemberService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -46,6 +47,8 @@ public class MemberServiceImpl implements MemberService {
     private MemberMapper memberMapper;
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -106,6 +109,7 @@ public class MemberServiceImpl implements MemberService {
         //按照id存token，按照token存用户信息
         stringRedisTemplate.opsForValue().set(RedisConstant.LOGIN_OPENID + memberDTO.getOpenid(), token, 2, TimeUnit.HOURS);
         stringRedisTemplate.opsForValue().set(RedisConstant.LOGIN_TOKEN + token, objectMapper.writeValueAsString(memberDTO), 2, TimeUnit.HOURS);
+        rabbitTemplate.convertAndSend("coupon.message","user.hello",memberDTO);
         return memberDTO;
     }
 

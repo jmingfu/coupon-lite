@@ -65,8 +65,8 @@ spring:
         retry:
           enabled: false
     template:
-      exchange: web.demo
-      routing-key: user.key
+      exchange: coupon.message
+      routing-key: user.hello
 
 #MyBatis配置
 mybatis:

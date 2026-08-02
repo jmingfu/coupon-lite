@@ -70,7 +70,6 @@ public class Member implements Serializable {
     /**
      * 注册时间
      */
-    @TableField(fill = FieldFill.INSERT)
     @ApiModelProperty("注册时间")
     private LocalDateTime createTime;
     /**
