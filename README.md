@@ -96,10 +96,7 @@ cd coupon-lite
 mvn spring-boot:run
 ```
 
-### 访问地址
 
-- **API文档**: http://localhost:8080/swagger-ui.html
-- **应用首页**: http://localhost:8080
 
 ## 许可证
 
