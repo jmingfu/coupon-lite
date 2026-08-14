@@ -8,7 +8,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.coupon.common.RedisConstant;
 import com.coupon.common.config.WechatLoginProperties;
 import com.coupon.common.config.WechatMiniConfig;
+import com.coupon.common.enums.ExchangeNameEnum;
 import com.coupon.common.enums.MemberStatusEnum;
+import com.coupon.common.enums.RoutingKeyNameEnum;
 import com.coupon.common.exception.ReturnException;
 import com.coupon.controller.MemberController;
 import com.coupon.dto.MemberDTO;
@@ -109,7 +111,7 @@ public class MemberServiceImpl implements MemberService {
         //按照id存token，按照token存用户信息
         stringRedisTemplate.opsForValue().set(RedisConstant.LOGIN_OPENID + memberDTO.getOpenid(), token, 2, TimeUnit.HOURS);
         stringRedisTemplate.opsForValue().set(RedisConstant.LOGIN_TOKEN + token, objectMapper.writeValueAsString(memberDTO), 2, TimeUnit.HOURS);
-        rabbitTemplate.convertAndSend("coupon.message","user.hello",memberDTO);
+        rabbitTemplate.convertAndSend(ExchangeNameEnum.HELLO_DIRECT_EXCHANGE.getName(), RoutingKeyNameEnum.HELLO_ROUTING_KEY.getName(), memberDTO);
         return memberDTO;
     }
 
