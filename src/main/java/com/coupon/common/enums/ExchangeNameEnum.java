@@ -15,7 +15,8 @@ import io.swagger.annotations.Api;
 public enum ExchangeNameEnum {
     HELLO_DIRECT_EXCHANGE("coupon.message", "发送欢迎消息的交换机"),
     RETRY_TOP_EXCHANGE("coupon.retry", "通用消息重试主题交换机"),
-    DEAD_MESSAGE_DIRECT_EXCHANGE("coupon.dead","死信交换机");
+    DEAD_MESSAGE_DIRECT_EXCHANGE("coupon.dead","死信交换机"),
+    DELAY_EXCHANGE("coupon.delay","延迟交换机");
 
     @EnumValue
     private final String name;

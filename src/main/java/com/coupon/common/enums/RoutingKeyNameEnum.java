@@ -14,7 +14,7 @@ import io.swagger.annotations.Api;
 
 public enum RoutingKeyNameEnum {
     HELLO_ROUTING_KEY("user.hello", "发送欢迎消息路由键"),
-    RETRY_HELLO_ROUTING_KEY("retry.hello.*", "欢迎消息重试路由键");
+    RETRY_HELLO_ROUTING_KEY("retry.hello", "欢迎消息重试路由键");
 
     @EnumValue
     private final String name;

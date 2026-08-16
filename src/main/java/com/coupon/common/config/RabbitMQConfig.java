@@ -8,6 +8,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * 基于SpringBoot框架的个人练手项目-RabbitMQ配置
  *
@@ -26,14 +29,22 @@ public class RabbitMQConfig {
 
     //发送重试消息的主题交换机
     @Bean
-    public TopicExchange retryTopicExchange() {
-        return new TopicExchange(ExchangeNameEnum.RETRY_TOP_EXCHANGE.getName(), true, false);
+    public DirectExchange retryDirectExchange() {
+        return new DirectExchange(ExchangeNameEnum.RETRY_TOP_EXCHANGE.getName(), true, false);
     }
 
     //路由死信消息的死信交换机
     @Bean
     public DirectExchange deadMessageDirectExchange() {
         return new DirectExchange(ExchangeNameEnum.DEAD_MESSAGE_DIRECT_EXCHANGE.getName(), true, false);
+    }
+
+    //延迟交换机
+    @Bean
+    public CustomExchange delayExchange() {
+        Map<String, Object> args = new HashMap<>();
+        args.put("x-delayed-type", "direct");
+        return new CustomExchange(ExchangeNameEnum.DELAY_EXCHANGE.getName(), "x-delayed-message", true, false, args);
     }
 
     @Bean
@@ -43,7 +54,9 @@ public class RabbitMQConfig {
 
     @Bean
     public Queue retryQueue() {
-        return QueueBuilder.durable(QueueNameEnum.RETRY_QUEUE.getName()).withArgument("x-message-ttl", 3000).build();
+        return QueueBuilder.durable(QueueNameEnum.RETRY_QUEUE.getName())
+                .withArgument("x-dead-letter-exchange", ExchangeNameEnum.DEAD_MESSAGE_DIRECT_EXCHANGE.getName())
+                .withArgument("x-message-ttl", 3000).build();
     }
 
     @Bean
@@ -53,14 +66,20 @@ public class RabbitMQConfig {
 
     //绑定重试交换机和重试队列
     @Bean
-    public Binding bindingHelloWithRetryQueue(@Qualifier("retryQueue") Queue retryQueue, TopicExchange retryTopicExchange) {
-        return BindingBuilder.bind(retryQueue).to(retryTopicExchange).with(RoutingKeyNameEnum.RETRY_HELLO_ROUTING_KEY);
+    public Binding bindingHelloWithRetryQueue(@Qualifier("retryQueue") Queue retryQueue, DirectExchange retryDirectExchange) {
+        return BindingBuilder.bind(retryQueue).to(retryDirectExchange).with(RoutingKeyNameEnum.RETRY_HELLO_ROUTING_KEY);
     }
 
     //绑定死信交换机和业务队列
     @Bean
     public Binding bindingDeadWithHelloQueue(@Qualifier("helloQueue") Queue helloQueue, DirectExchange deadMessageDirectExchange) {
         return BindingBuilder.bind(helloQueue).to(deadMessageDirectExchange).with(RoutingKeyNameEnum.RETRY_HELLO_ROUTING_KEY);
+    }
+
+    //绑定延迟交换机和业务队列
+    @Bean
+    public Binding bindDelayWithHelloQueue(@Qualifier("helloQueue") Queue helloQueue, CustomExchange delayExchange) {
+        return BindingBuilder.bind(helloQueue).to(delayExchange).with(RoutingKeyNameEnum.RETRY_HELLO_ROUTING_KEY).noargs();
     }
 
 }

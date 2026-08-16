@@ -111,7 +111,11 @@ public class MemberServiceImpl implements MemberService {
         //按照id存token，按照token存用户信息
         stringRedisTemplate.opsForValue().set(RedisConstant.LOGIN_OPENID + memberDTO.getOpenid(), token, 2, TimeUnit.HOURS);
         stringRedisTemplate.opsForValue().set(RedisConstant.LOGIN_TOKEN + token, objectMapper.writeValueAsString(memberDTO), 2, TimeUnit.HOURS);
-        rabbitTemplate.convertAndSend(ExchangeNameEnum.HELLO_DIRECT_EXCHANGE.getName(), RoutingKeyNameEnum.HELLO_ROUTING_KEY.getName(), memberDTO);
+        rabbitTemplate.convertAndSend(ExchangeNameEnum.HELLO_DIRECT_EXCHANGE.getName(), RoutingKeyNameEnum.HELLO_ROUTING_KEY.getName(), memberDTO, message -> {
+            message.getMessageProperties().setHeader("retryCount", 3);
+            return message;
+        });
+
         return memberDTO;
     }
 
